@@ -8,19 +8,19 @@
     <fragment
         android:id="@+id/nav_transform"
         android:name="com.example.rmcfrontend.ui.transform.TransformFragment"
-        android:label="@string/menu_transform"
+        android:label="@string/menu_listings"
         tools:layout="@layout/fragment_transform" />
 
     <fragment
         android:id="@+id/nav_reflow"
         android:name="com.example.rmcfrontend.ui.reflow.ReflowFragment"
-        android:label="@string/menu_reflow"
+        android:label="@string/menu_map"
         tools:layout="@layout/fragment_reflow" />
 
     <fragment
         android:id="@+id/nav_slideshow"
         android:name="com.example.rmcfrontend.ui.slideshow.SlideshowFragment"
-        android:label="@string/menu_slideshow"
+        android:label="@string/menu_user"
         tools:layout="@layout/fragment_slideshow" />
 
     <fragment

@@ -1,0 +1,36 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="48dp"
+    android:height="48dp"
+    android:viewportWidth="48"
+    android:viewportHeight="48">
+
+    <!-- Map rectangle -->
+    <path
+        android:fillColor="#AED581"
+        android:strokeColor="#7CB342"
+        android:strokeWidth="2"
+        android:pathData="M6,6 H42 V34 H6 Z" />
+
+    <!-- Map grid lines -->
+    <path
+        android:strokeColor="#558B2F"
+        android:strokeWidth="1"
+        android:pathData="M6,14 H42" />
+    <path
+        android:strokeColor="#558B2F"
+        android:strokeWidth="1"
+        android:pathData="M6,22 H42" />
+    <path
+        android:strokeColor="#558B2F"
+        android:strokeWidth="1"
+        android:pathData="M14,6 V34" />
+    <path
+        android:strokeColor="#558B2F"
+        android:strokeWidth="1"
+        android:pathData="M22,6 V34" />
+
+    <!-- Pin on map -->
+    <path
+        android:fillColor="#FF5722"
+        android:pathData="M32,10 C29,10 26,13 26,16 C26,20 32,28 32,28 C32,28 38,20 38,16 C38,13 35,10 32,10 Z" />
+</vector>
