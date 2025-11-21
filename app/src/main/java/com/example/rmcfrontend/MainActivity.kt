@@ -25,6 +25,11 @@ class MainActivity : AppCompatActivity() {
         setContentView(binding.root)
         setSupportActionBar(binding.appBarMain.toolbar)
 
+        val bottomNav = findViewById<com.google.android.material.bottomnavigation.BottomNavigationView>(
+            R.id.bottom_nav_view
+        )
+        bottomNav.itemIconTintList = null
+
         binding.appBarMain.addCarButton?.setOnClickListener { view ->
             Snackbar.make(view, "Button for listing a car", Snackbar.LENGTH_LONG)
                 .setAction("Action", null)

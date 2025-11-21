@@ -40,7 +40,8 @@
             android:layout_margin="@dimen/fab_margin"
             android:contentDescription="@string/fab_content_description"
             android:visibility="visible"
-            app:backgroundTint="#03A9F4"
+            app:backgroundTint="?attr/colorPrimary"
+            app:tint="@null"
             app:fabSize="auto"
             app:srcCompat="@drawable/car"
             app:useCompatPadding="false" />

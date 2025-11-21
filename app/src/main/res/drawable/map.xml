@@ -7,29 +7,24 @@
     <!-- Map rectangle -->
     <path
         android:fillColor="#AED581"
-        android:strokeColor="#7CB342"
-        android:strokeWidth="2"
         android:pathData="M6,6 H42 V34 H6 Z" />
 
-    <!-- Map grid lines -->
+    <!-- Grid lines made as filled shapes -->
     <path
-        android:strokeColor="#558B2F"
-        android:strokeWidth="1"
-        android:pathData="M6,14 H42" />
+        android:fillColor="#558B2F"
+        android:pathData="M6,13.5 H42 V14.5 H6 Z" />
     <path
-        android:strokeColor="#558B2F"
-        android:strokeWidth="1"
-        android:pathData="M6,22 H42" />
-    <path
-        android:strokeColor="#558B2F"
-        android:strokeWidth="1"
-        android:pathData="M14,6 V34" />
-    <path
-        android:strokeColor="#558B2F"
-        android:strokeWidth="1"
-        android:pathData="M22,6 V34" />
+        android:fillColor="#558B2F"
+        android:pathData="M6,21.5 H42 V22.5 H6 Z" />
 
-    <!-- Pin on map -->
+    <path
+        android:fillColor="#558B2F"
+        android:pathData="M13.5,6 H14.5 V34 H13.5 Z" />
+    <path
+        android:fillColor="#558B2F"
+        android:pathData="M21.5,6 H22.5 V34 H21.5 Z" />
+
+    <!-- Pin -->
     <path
         android:fillColor="#FF5722"
         android:pathData="M32,10 C29,10 26,13 26,16 C26,20 32,28 32,28 C32,28 38,20 38,16 C38,13 35,10 32,10 Z" />

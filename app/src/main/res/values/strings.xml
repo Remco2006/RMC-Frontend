@@ -22,4 +22,9 @@
     <string name="image_view_item_transform_content_description">Represents an image view in the
         item
     </string>
+    <string name="geen_autos_gevonden">Geen autos gevonden</string>
+    <string name="car_image" />
+    <string name="make_model">Make Model</string>
+    <string name="year_color">Year • Color</string>
+    <string name="price_value">€ ...</string>
 </resources>

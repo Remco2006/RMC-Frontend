@@ -4,8 +4,13 @@
     android:viewportWidth="48"
     android:viewportHeight="48">
 
-    <!-- Body -->
+    <!-- Head -->
+    <path
+        android:fillColor="#FFC107"
+        android:pathData="M24 12a12 12 0 1 0 0.0001 0z" />
+
+    <!-- Shoulders / Body -->
     <path
         android:fillColor="#4CAF50"
-        android:pathData="M12,38 C12,30 36,30 36,38 L36,42 L12,42 Z" />
+        android:pathData="M12 36c0-8 24-8 24 0v6H12v-6z" />
 </vector>
