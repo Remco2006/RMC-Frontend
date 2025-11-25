@@ -8,14 +8,26 @@ import retrofit2.converter.gson.GsonConverterFactory
 object ApiClient {
 
     private const val BASE_URL = "http://10.0.2.2:8080/"
-    private const val BEARER_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJqd3QtYXVkaWVuY2UiLCJpc3MiOiJodHRwczovL2xvY2FsaG9zdDo4MDgwLyIsImVtYWlsIjoidGVzdEBleGFtcGxlLmNvbSIsImlkIjoyLCJleHAiOjE3NjM3NTg4OTR9.UniZdt9I4pTCJRK7_Y2mEo4VTlBnhFXHhBIAjwmJF-k"
+    private var authToken: String? = null
+
+    fun setAuthToken(token: String) {
+        authToken = token
+    }
+
+    fun clearAuthToken() {
+        authToken = null
+    }
+
+    fun hasAuthToken(): Boolean = authToken != null
 
     private val authInterceptor = Interceptor { chain ->
-        val req = chain.request().newBuilder()
-            .addHeader("Authorization", "Bearer $BEARER_TOKEN")
-            .build()
+        val requestBuilder = chain.request().newBuilder()
 
-        chain.proceed(req)
+        val token = authToken
+
+        requestBuilder.addHeader("Authorization", "Bearer $token")
+
+        chain.proceed(requestBuilder.build())
     }
 
     private val httpClient = OkHttpClient.Builder()
@@ -29,4 +41,5 @@ object ApiClient {
         .build()
 
     val carsApi: CarsApi = retrofit.create(CarsApi::class.java)
+    val authApi: AuthApi = retrofit.create(AuthApi::class.java)
 }

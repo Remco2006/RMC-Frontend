@@ -1,6 +1,6 @@
 package com.example.rmcfrontend.api
 
-import com.example.rmcfrontend.api.models.CarsResponse
+import com.example.rmcfrontend.api.models.response.CarsResponse
 import retrofit2.http.GET
 
 interface CarsApi {
