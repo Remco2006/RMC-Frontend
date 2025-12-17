@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <item name="create_deposit" type="id" />
+    <item name="create_costPerKilometer" type="id" />
+    <item name="create_bookingCost" type="id" />
+    <item name="create_modelYear" type="id" />
+    <item name="create_doors" type="id" />
+    <item name="create_seats" type="id" />
+    <item name="create_transmission" type="id" />
+    <item name="create_fuelType" type="id" />
+    <item name="create_enginePower" type="id" />
+    <item name="create_engineType" type="id" />
+    <item name="create_color" type="id" />
+    <item name="create_powerSourceType" type="id" />
+    <item name="create_category" type="id" />
+</resources>

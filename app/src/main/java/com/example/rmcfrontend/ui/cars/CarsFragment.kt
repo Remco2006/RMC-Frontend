@@ -8,12 +8,13 @@ import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.rmcfrontend.R
 import com.example.rmcfrontend.api.ApiClient
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 class CarsFragment : Fragment() {
@@ -33,7 +34,13 @@ class CarsFragment : Fragment() {
         progressBar = root.findViewById(R.id.cars_progress)
         emptyText = root.findViewById(R.id.cars_empty)
 
-        adapter = CarAdapter()
+        adapter = CarAdapter { car ->
+            val bundle = Bundle().apply {
+                putString("carId", car.id.toString())
+            }
+            findNavController().navigate(R.id.carDetailsFragment, bundle)
+        }
+
         recyclerView.layoutManager = LinearLayoutManager(requireContext())
         recyclerView.adapter = adapter
 
@@ -52,10 +59,8 @@ class CarsFragment : Fragment() {
                 }
 
                 val cars = response.GetCarResponseList
-
                 adapter.submitList(cars)
-                emptyText.visibility =
-                    if (cars.isEmpty()) View.VISIBLE else View.GONE
+                emptyText.visibility = if (cars.isEmpty()) View.VISIBLE else View.GONE
 
             } catch (t: Throwable) {
                 emptyText.visibility = View.VISIBLE

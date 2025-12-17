@@ -27,4 +27,6 @@
     <string name="make_model">Make Model</string>
     <string name="year_color">Year • Color</string>
     <string name="price_value">€ ...</string>
+    <string name="edit_car">Bewerken</string>
+    <string name="logout">Logout</string>
 </resources>

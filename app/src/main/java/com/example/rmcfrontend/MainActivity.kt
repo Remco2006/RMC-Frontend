@@ -4,6 +4,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
+import android.widget.Toast
 import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.navigation.NavigationView
 import androidx.navigation.findNavController
@@ -13,6 +14,7 @@ import androidx.navigation.ui.navigateUp
 import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
 import androidx.appcompat.app.AppCompatActivity
+import androidx.navigation.fragment.findNavController
 import com.example.rmcfrontend.api.ApiClient
 import com.example.rmcfrontend.auth.TokenManager
 import com.example.rmcfrontend.databinding.ActivityMainBinding
@@ -48,9 +50,10 @@ class MainActivity : AppCompatActivity() {
         bottomNav.itemIconTintList = null
 
         binding.appBarMain.addCarButton?.setOnClickListener { view ->
-            Snackbar.make(view, "Button for listing a car", Snackbar.LENGTH_LONG)
-                .setAction("Action", null)
-                .setAnchorView(R.id.addCarButton).show()
+            val navController = supportFragmentManager
+                .findFragmentById(R.id.nav_host_fragment_content_main)
+                ?.findNavController()
+            navController?.navigate(R.id.createCarFragment)
         }
 
         val navHostFragment =
