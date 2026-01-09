@@ -23,13 +23,18 @@ class EditCarFragment : Fragment(R.layout.fragment_edit_car) {
     private lateinit var makeEdit: EditText
     private lateinit var modelEdit: EditText
     private lateinit var priceEdit: EditText
+    private lateinit var modelYearEdit: EditText
     private lateinit var colorEdit: EditText
     private lateinit var transmissionEdit: EditText
-    private lateinit var engineTypeEdit: EditText
-    private lateinit var enginePowerEdit: EditText
+    private lateinit var seatsEdit: EditText
+    private lateinit var doorsEdit: EditText
+    private lateinit var licensePlateEdit: EditText
+    private lateinit var pickupLocationEdit: EditText
     private lateinit var bookingCostEdit: EditText
     private lateinit var depositEdit: EditText
     private lateinit var costPerKmEdit: EditText
+    private lateinit var engineTypeEdit: EditText
+    private lateinit var enginePowerEdit: EditText
     private lateinit var saveButton: Button
 
     private var car: Car? = null
@@ -37,37 +42,44 @@ class EditCarFragment : Fragment(R.layout.fragment_edit_car) {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // Bind UI elementen
         progressBar = view.findViewById(R.id.edit_car_progress)
         makeEdit = view.findViewById(R.id.edit_make)
         modelEdit = view.findViewById(R.id.edit_model)
         priceEdit = view.findViewById(R.id.edit_price)
+        modelYearEdit = view.findViewById(R.id.edit_modelYear)
         colorEdit = view.findViewById(R.id.edit_color)
         transmissionEdit = view.findViewById(R.id.edit_transmission)
-        engineTypeEdit = view.findViewById(R.id.edit_engineType)
-        enginePowerEdit = view.findViewById(R.id.edit_enginePower)
+        seatsEdit = view.findViewById(R.id.edit_seats)
+        doorsEdit = view.findViewById(R.id.edit_doors)
+        licensePlateEdit = view.findViewById(R.id.edit_licensePlate)
+        pickupLocationEdit = view.findViewById(R.id.edit_pickupLocation)
         bookingCostEdit = view.findViewById(R.id.edit_bookingCost)
         depositEdit = view.findViewById(R.id.edit_deposit)
         costPerKmEdit = view.findViewById(R.id.edit_costPerKilometer)
+        engineTypeEdit = view.findViewById(R.id.edit_engineType)
+        enginePowerEdit = view.findViewById(R.id.edit_enginePower)
         saveButton = view.findViewById(R.id.edit_save_btn)
 
-        // Laad auto gegevens
         loadCar(args.carId)
 
-        // Save button klik
         saveButton.setOnClickListener {
             car?.let { c ->
                 val updatedCar = c.copy(
                     make = makeEdit.text.toString(),
                     model = modelEdit.text.toString(),
                     price = priceEdit.text.toString().toFloatOrNull(),
+                    modelYear = modelYearEdit.text.toString().toIntOrNull(),
                     color = colorEdit.text.toString(),
                     transmission = transmissionEdit.text.toString(),
-                    engineType = engineTypeEdit.text.toString(),
-                    enginePower = enginePowerEdit.text.toString(),
+                    seats = seatsEdit.text.toString().toIntOrNull(),
+                    doors = doorsEdit.text.toString().toIntOrNull(),
+                    licensePlate = licensePlateEdit.text.toString(),
+                    pickupLocation = pickupLocationEdit.text.toString(),
                     bookingCost = bookingCostEdit.text.toString().toFloatOrNull(),
                     deposit = depositEdit.text.toString().toFloatOrNull(),
                     costPerKilometer = costPerKmEdit.text.toString().toFloatOrNull(),
+                    engineType = engineTypeEdit.text.toString(),
+                    enginePower = enginePowerEdit.text.toString()
                 )
                 updateCar(updatedCar)
             }
@@ -84,17 +96,25 @@ class EditCarFragment : Fragment(R.layout.fragment_edit_car) {
 
                 car = response
                 car?.let { c ->
-                    // Veilige conversie naar String
                     makeEdit.setText(c.make ?: "")
                     modelEdit.setText(c.model ?: "")
                     priceEdit.setText(c.price?.toString() ?: "")
+                    modelYearEdit.setText(c.modelYear?.toString() ?: "")
                     colorEdit.setText(c.color ?: "")
                     transmissionEdit.setText(c.transmission ?: "")
-                    engineTypeEdit.setText(c.engineType ?: "")
-                    enginePowerEdit.setText(c.enginePower ?: "")
+
+                    seatsEdit.setText(c.seats?.toString() ?: "")
+                    doorsEdit.setText(c.doors?.toString() ?: "")
+
+                    licensePlateEdit.setText(c.licensePlate ?: "")
+                    pickupLocationEdit.setText(c.pickupLocation ?: "")
+
                     bookingCostEdit.setText(c.bookingCost?.toString() ?: "")
                     depositEdit.setText(c.deposit?.toString() ?: "")
                     costPerKmEdit.setText(c.costPerKilometer?.toString() ?: "")
+
+                    engineTypeEdit.setText(c.engineType ?: "")
+                    enginePowerEdit.setText(c.enginePower ?: "")
                 }
 
             } catch (t: Throwable) {

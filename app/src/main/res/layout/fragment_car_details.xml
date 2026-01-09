@@ -113,5 +113,15 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"/>
 
+        <!-- Delete Button -->
+        <Button
+            android:id="@+id/car_delete_btn"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Verwijder Auto"
+            android:backgroundTint="@android:color/holo_red_dark"
+            android:textColor="@android:color/white"
+            android:layout_marginTop="24dp"/>
+
     </LinearLayout>
 </ScrollView>

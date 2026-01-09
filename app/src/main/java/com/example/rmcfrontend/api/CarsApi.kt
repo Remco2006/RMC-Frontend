@@ -5,6 +5,7 @@ import com.example.rmcfrontend.api.models.CreateCarRequest
 import com.example.rmcfrontend.api.models.request.UpdateCarRequest
 import com.example.rmcfrontend.api.models.response.CarsResponse
 import retrofit2.http.Body
+import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.POST
 import retrofit2.http.PUT
@@ -26,4 +27,6 @@ interface CarsApi {
     suspend fun createCar(
         @Body request: CreateCarRequest
     ): Car
+    @DELETE("cars/{id}")
+    suspend fun deleteCar(@Path("id") id: String)
 }

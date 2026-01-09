@@ -1,8 +1,10 @@
 package com.example.rmcfrontend.ui.cars
 
+import android.app.AlertDialog
 import android.os.Bundle
 import android.util.Log
 import android.view.View
+import android.widget.Button
 import android.widget.ImageView
 import android.widget.ProgressBar
 import android.widget.TextView
@@ -33,6 +35,9 @@ class CarDetailsFragment : Fragment(R.layout.fragment_car_details) {
     private lateinit var bookingCost: TextView
     private lateinit var deposit: TextView
     private lateinit var editButton: ImageView
+    private lateinit var deleteButton: Button
+
+    private var currentCarId: String? = null
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -51,10 +56,20 @@ class CarDetailsFragment : Fragment(R.layout.fragment_car_details) {
         bookingCost = view.findViewById(R.id.car_booking_cost)
         deposit = view.findViewById(R.id.car_deposit)
         editButton = view.findViewById(R.id.car_edit)
+        deleteButton = view.findViewById(R.id.car_delete_btn)
 
         val carId = arguments?.getString("carId")
-        if (carId != null) loadCarDetails(carId)
-        else Toast.makeText(context, "Geen carId ontvangen", Toast.LENGTH_SHORT).show()
+        if (carId != null) {
+            currentCarId = carId
+            loadCarDetails(carId)
+        } else {
+            Toast.makeText(context, "Geen carId ontvangen", Toast.LENGTH_SHORT).show()
+        }
+
+        // Delete button click
+        deleteButton.setOnClickListener {
+            showDeleteConfirmationDialog()
+        }
     }
 
     private fun loadCarDetails(carId: String) {
@@ -103,6 +118,39 @@ class CarDetailsFragment : Fragment(R.layout.fragment_car_details) {
             } catch (t: Throwable) {
                 Log.e("CarDetailsFragment", "Fout bij laden auto", t)
                 Toast.makeText(context, "Kan auto niet laden: ${t.message}", Toast.LENGTH_LONG).show()
+            } finally {
+                progressBar.visibility = View.GONE
+            }
+        }
+    }
+
+    private fun showDeleteConfirmationDialog() {
+        AlertDialog.Builder(requireContext())
+            .setTitle("Auto verwijderen")
+            .setMessage("Weet je zeker dat je deze auto wilt verwijderen? Deze actie kan niet ongedaan worden gemaakt.")
+            .setPositiveButton("Verwijderen") { _, _ ->
+                currentCarId?.let { deleteCar(it) }
+            }
+            .setNegativeButton("Annuleren", null)
+            .show()
+    }
+
+    private fun deleteCar(carId: String) {
+        progressBar.visibility = View.VISIBLE
+
+        lifecycleScope.launch {
+            try {
+                withContext(Dispatchers.IO) {
+                    ApiClient.carsApi.deleteCar(carId)
+                }
+
+                Toast.makeText(context, "Auto succesvol verwijderd", Toast.LENGTH_SHORT).show()
+
+                findNavController().navigateUp()
+
+            } catch (t: Throwable) {
+                Log.e("CarDetailsFragment", "Fout bij verwijderen auto", t)
+                Toast.makeText(context, "Kan auto niet verwijderen: ${t.message}", Toast.LENGTH_LONG).show()
             } finally {
                 progressBar.visibility = View.GONE
             }
