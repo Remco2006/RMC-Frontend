@@ -35,11 +35,11 @@
     <string name="last_name">Last name</string>
     <string name="email">Email</string>
     <string name="save">Save</string>
-    <string name="delete_account">Delete account</string>
-    <string name="confirm_delete_title">Delete account</string>
-    <string name="confirm_delete_message">Are you sure you want to permanently delete your account?</string>
+    <string name="delete_account">Disable account</string>
+    <string name="confirm_disable_title">Disable account</string>
+    <string name="confirm_disable_message">Are you sure you want to disable your account? You will not be able to log in until it is re-enabled.</string>
     <string name="cancel">Cancel</string>
-    <string name="delete">Delete</string>
+    <string name="disable">Disable</string>
 
     <string name="create_account">Create account</string>
     <string name="register">Register</string>

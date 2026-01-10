@@ -47,7 +47,7 @@ class SettingsFragment : Fragment() {
                 return@setOnClickListener
             }
 
-            confirmDelete(userId)
+            confirmDisable(userId)
         }
 
         binding.saveButton.setOnClickListener {
@@ -86,30 +86,30 @@ class SettingsFragment : Fragment() {
         binding.emailInput.isEnabled = !isLoading
     }
 
-    private fun confirmDelete(userId: Int) {
+    private fun confirmDisable(userId: Int) {
         AlertDialog.Builder(requireContext())
-            .setTitle(getString(com.example.rmcfrontend.R.string.confirm_delete_title))
-            .setMessage(getString(com.example.rmcfrontend.R.string.confirm_delete_message))
+            .setTitle(getString(com.example.rmcfrontend.R.string.confirm_disable_title))
+            .setMessage(getString(com.example.rmcfrontend.R.string.confirm_disable_message))
             .setNegativeButton(getString(com.example.rmcfrontend.R.string.cancel)) { dialog, _ ->
                 dialog.dismiss()
             }
-            .setPositiveButton(getString(com.example.rmcfrontend.R.string.delete)) { dialog, _ ->
+            .setPositiveButton(getString(com.example.rmcfrontend.R.string.disable)) { dialog, _ ->
                 dialog.dismiss()
-                deleteUser(userId)
+                disableUser(userId)
             }
             .show()
     }
 
-    private fun deleteUser(userId: Int) {
+    private fun disableUser(userId: Int) {
         viewLifecycleOwner.lifecycleScope.launch {
             try {
                 setLoading(true)
                 val response = withContext(Dispatchers.IO) {
-                    ApiClient.usersApi.deleteUser(userId)
+                    ApiClient.usersApi.disableUser(userId)
                 }
 
                 if (response.isSuccessful) {
-                    Toast.makeText(requireContext(), "Account verwijderd.", Toast.LENGTH_LONG).show()
+                    Toast.makeText(requireContext(), "Account uitgeschakeld.", Toast.LENGTH_LONG).show()
                     (activity as? MainActivity)?.logout()
                 } else {
                     if (response.code() == 401) {
@@ -119,7 +119,7 @@ class SettingsFragment : Fragment() {
                     }
                     Toast.makeText(
                         requireContext(),
-                        "Verwijderen mislukt: ${response.message()}",
+                        "Uitschakelen mislukt: ${response.message()}",
                         Toast.LENGTH_LONG
                     ).show()
                 }
