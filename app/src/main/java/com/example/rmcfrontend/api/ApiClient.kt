@@ -48,4 +48,5 @@ object ApiClient {
 
     val carsApi: CarsApi = retrofit.create(CarsApi::class.java)
     val authApi: AuthApi = retrofit.create(AuthApi::class.java)
+    val usersApi: UsersApi = retrofit.create(UsersApi::class.java)
 }

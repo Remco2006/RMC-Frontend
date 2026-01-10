@@ -28,6 +28,10 @@ class TokenManager(context: Context) {
 
     fun getEmail(): String? = prefs.getString(KEY_EMAIL, null)
 
+    fun updateEmail(email: String) {
+        prefs.edit().putString(KEY_EMAIL, email).apply()
+    }
+
     fun clearToken() {
         prefs.edit().clear().apply()
     }

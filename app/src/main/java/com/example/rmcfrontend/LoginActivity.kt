@@ -21,6 +21,7 @@ class LoginActivity : AppCompatActivity() {
     private lateinit var emailInput: EditText
     private lateinit var passwordInput: EditText
     private lateinit var loginButton: Button
+    private lateinit var openRegisterButton: Button
     private lateinit var progressBar: ProgressBar
     private lateinit var tokenManager: TokenManager
 
@@ -38,6 +39,7 @@ class LoginActivity : AppCompatActivity() {
         emailInput = findViewById(R.id.email_input)
         passwordInput = findViewById(R.id.password_input)
         loginButton = findViewById(R.id.login_button)
+        openRegisterButton = findViewById(R.id.open_register_button)
         progressBar = findViewById(R.id.login_progress)
 
         loginButton.setOnClickListener {
@@ -50,6 +52,10 @@ class LoginActivity : AppCompatActivity() {
             }
 
             performLogin(email, password)
+        }
+
+        openRegisterButton.setOnClickListener {
+            startActivity(Intent(this, RegisterActivity::class.java))
         }
     }
 

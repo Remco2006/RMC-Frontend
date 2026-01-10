@@ -32,13 +32,12 @@
             android:resizeableActivity="true"
             android:theme="@style/Theme.RMCFrontend.NoActionBar"
             tools:targetApi="24">
-
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-
         </activity>
+
+        <activity
+            android:name=".RegisterActivity"
+            android:exported="false"
+            android:theme="@style/Theme.RMCFrontend" />
 
     </application>
 

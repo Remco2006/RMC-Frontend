@@ -29,4 +29,19 @@
     <string name="price_value">€ ...</string>
     <string name="edit_car">Bewerken</string>
     <string name="logout">Logout</string>
+
+    <string name="user_settings">User settings</string>
+    <string name="first_name">First name</string>
+    <string name="last_name">Last name</string>
+    <string name="email">Email</string>
+    <string name="save">Save</string>
+    <string name="delete_account">Delete account</string>
+    <string name="confirm_delete_title">Delete account</string>
+    <string name="confirm_delete_message">Are you sure you want to permanently delete your account?</string>
+    <string name="cancel">Cancel</string>
+    <string name="delete">Delete</string>
+
+    <string name="create_account">Create account</string>
+    <string name="register">Register</string>
+    <string name="password">Password</string>
 </resources>
