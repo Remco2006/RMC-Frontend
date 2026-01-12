@@ -76,6 +76,90 @@ fun CreateCarScreen(
     var costPerKilometer by rememberSaveable { mutableStateOf("") }
     var deposit by rememberSaveable { mutableStateOf("") }
 
+    // Error states
+    var userIdError by remember { mutableStateOf<String?>(null) }
+    var priceError by remember { mutableStateOf<String?>(null) }
+    var seatsError by remember { mutableStateOf<String?>(null) }
+    var doorsError by remember { mutableStateOf<String?>(null) }
+    var modelYearError by remember { mutableStateOf<String?>(null) }
+    var mileageError by remember { mutableStateOf<String?>(null) }
+    var bpmError by remember { mutableStateOf<String?>(null) }
+    var curbWeightError by remember { mutableStateOf<String?>(null) }
+    var maxWeightError by remember { mutableStateOf<String?>(null) }
+    var bookingCostError by remember { mutableStateOf<String?>(null) }
+    var costPerKilometerError by remember { mutableStateOf<String?>(null) }
+    var depositError by remember { mutableStateOf<String?>(null) }
+    var dateError by remember { mutableStateOf<String?>(null) }
+
+    // Validation helpers
+    fun validateInteger(value: String, fieldName: String, setError: (String?) -> Unit): Boolean {
+        if (value.isBlank()) {
+            setError(null)
+            return true
+        }
+        return if (value.toIntOrNull() == null) {
+            setError("$fieldName moet een geldig getal zijn")
+            false
+        } else if (value.toInt() < 0) {
+            setError("$fieldName moet positief zijn")
+            false
+        } else {
+            setError(null)
+            true
+        }
+    }
+
+    fun validateFloat(value: String, fieldName: String, setError: (String?) -> Unit): Boolean {
+        if (value.isBlank()) {
+            setError(null)
+            return true
+        }
+        return if (value.toFloatOrNull() == null) {
+            setError("$fieldName moet een geldig decimaal getal zijn")
+            false
+        } else if (value.toFloat() < 0) {
+            setError("$fieldName moet positief zijn")
+            false
+        } else {
+            setError(null)
+            true
+        }
+    }
+
+    fun validateDate(value: String): Boolean {
+        if (value.isBlank()) {
+            dateError = null
+            return true
+        }
+        val datePattern = Regex("""^\d{4}-\d{2}-\d{2}$""")
+        return if (!datePattern.matches(value)) {
+            dateError = "Datum moet in formaat YYYY-MM-DD zijn"
+            false
+        } else {
+            dateError = null
+            true
+        }
+    }
+
+    fun validateAllFields(): Boolean {
+        val validations = listOf(
+            validateInteger(userId, "User ID", { userIdError = it }),
+            validateFloat(price, "Prijs", { priceError = it }),
+            validateInteger(seats, "Stoelen", { seatsError = it }),
+            validateInteger(doors, "Deuren", { doorsError = it }),
+            validateInteger(modelYear, "Bouwjaar", { modelYearError = it }),
+            validateInteger(mileage, "Kilometerstand", { mileageError = it }),
+            validateFloat(bpm, "BPM", { bpmError = it }),
+            validateInteger(curbWeight, "Leeggewicht", { curbWeightError = it }),
+            validateInteger(maxWeight, "Max gewicht", { maxWeightError = it }),
+            validateFloat(bookingCost, "Boekingskosten", { bookingCostError = it }),
+            validateFloat(costPerKilometer, "Kosten per kilometer", { costPerKilometerError = it }),
+            validateFloat(deposit, "Borg", { depositError = it }),
+            validateDate(firstRegistrationDate)
+        )
+        return validations.all { it }
+    }
+
     Scaffold(topBar = {
         TopAppBar(
             title = { Text("Create Car") },
@@ -98,10 +182,15 @@ fun CreateCarScreen(
 
             OutlinedTextField(
                 value = userId,
-                onValueChange = { userId = it },
+                onValueChange = {
+                    userId = it
+                    validateInteger(it, "User ID", { userIdError = it })
+                },
                 label = { Text("User ID") },
                 modifier = Modifier.fillMaxWidth(),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                isError = userIdError != null,
+                supportingText = userIdError?.let { { Text(it) } }
             )
 
             OutlinedTextField(
@@ -120,10 +209,15 @@ fun CreateCarScreen(
 
             OutlinedTextField(
                 value = price,
-                onValueChange = { price = it },
+                onValueChange = {
+                    price = it
+                    validateFloat(it, "Prijs", { priceError = it })
+                },
                 label = { Text("Price") },
                 modifier = Modifier.fillMaxWidth(),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                isError = priceError != null,
+                supportingText = priceError?.let { { Text(it) } }
             )
 
             OutlinedTextField(
@@ -261,34 +355,54 @@ fun CreateCarScreen(
 
             OutlinedTextField(
                 value = seats,
-                onValueChange = { seats = it },
+                onValueChange = {
+                    seats = it
+                    validateInteger(it, "Stoelen", { seatsError = it })
+                },
                 label = { Text("Seats") },
                 modifier = Modifier.fillMaxWidth(),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                isError = seatsError != null,
+                supportingText = seatsError?.let { { Text(it) } }
             )
 
             OutlinedTextField(
                 value = doors,
-                onValueChange = { doors = it },
+                onValueChange = {
+                    doors = it
+                    validateInteger(it, "Deuren", { doorsError = it })
+                },
                 label = { Text("Doors") },
                 modifier = Modifier.fillMaxWidth(),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                isError = doorsError != null,
+                supportingText = doorsError?.let { { Text(it) } }
             )
 
             OutlinedTextField(
                 value = modelYear,
-                onValueChange = { modelYear = it },
+                onValueChange = {
+                    modelYear = it
+                    validateInteger(it, "Bouwjaar", { modelYearError = it })
+                },
                 label = { Text("Model Year") },
                 modifier = Modifier.fillMaxWidth(),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                isError = modelYearError != null,
+                supportingText = modelYearError?.let { { Text(it) } }
             )
 
             OutlinedTextField(
                 value = mileage,
-                onValueChange = { mileage = it },
+                onValueChange = {
+                    mileage = it
+                    validateInteger(it, "Kilometerstand", { mileageError = it })
+                },
                 label = { Text("Mileage") },
                 modifier = Modifier.fillMaxWidth(),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                isError = mileageError != null,
+                supportingText = mileageError?.let { { Text(it) } }
             )
 
             HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
@@ -317,9 +431,14 @@ fun CreateCarScreen(
 
             OutlinedTextField(
                 value = firstRegistrationDate,
-                onValueChange = { firstRegistrationDate = it },
+                onValueChange = {
+                    firstRegistrationDate = it
+                    validateDate(it)
+                },
                 label = { Text("First Registration Date (YYYY-MM-DD)") },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                isError = dateError != null,
+                supportingText = dateError?.let { { Text(it) } }
             )
 
             HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
@@ -327,92 +446,124 @@ fun CreateCarScreen(
 
             OutlinedTextField(
                 value = bpm,
-                onValueChange = { bpm = it },
+                onValueChange = {
+                    bpm = it
+                    validateFloat(it, "BPM", { bpmError = it })
+                },
                 label = { Text("BPM") },
                 modifier = Modifier.fillMaxWidth(),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                isError = bpmError != null,
+                supportingText = bpmError?.let { { Text(it) } }
             )
 
             OutlinedTextField(
                 value = curbWeight,
-                onValueChange = { curbWeight = it },
+                onValueChange = {
+                    curbWeight = it
+                    validateInteger(it, "Leeggewicht", { curbWeightError = it })
+                },
                 label = { Text("Curb Weight (kg)") },
                 modifier = Modifier.fillMaxWidth(),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                isError = curbWeightError != null,
+                supportingText = curbWeightError?.let { { Text(it) } }
             )
 
             OutlinedTextField(
                 value = maxWeight,
-                onValueChange = { maxWeight = it },
+                onValueChange = {
+                    maxWeight = it
+                    validateInteger(it, "Max gewicht", { maxWeightError = it })
+                },
                 label = { Text("Max Weight (kg)") },
                 modifier = Modifier.fillMaxWidth(),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                isError = maxWeightError != null,
+                supportingText = maxWeightError?.let { { Text(it) } }
             )
 
             OutlinedTextField(
                 value = bookingCost,
-                onValueChange = { bookingCost = it },
+                onValueChange = {
+                    bookingCost = it
+                    validateFloat(it, "Boekingskosten", { bookingCostError = it })
+                },
                 label = { Text("Booking Cost") },
                 modifier = Modifier.fillMaxWidth(),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                isError = bookingCostError != null,
+                supportingText = bookingCostError?.let { { Text(it) } }
             )
 
             OutlinedTextField(
                 value = costPerKilometer,
-                onValueChange = { costPerKilometer = it },
+                onValueChange = {
+                    costPerKilometer = it
+                    validateFloat(it, "Kosten per kilometer", { costPerKilometerError = it })
+                },
                 label = { Text("Cost Per Kilometer") },
                 modifier = Modifier.fillMaxWidth(),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                isError = costPerKilometerError != null,
+                supportingText = costPerKilometerError?.let { { Text(it) } }
             )
 
             OutlinedTextField(
                 value = deposit,
-                onValueChange = { deposit = it },
+                onValueChange = {
+                    deposit = it
+                    validateFloat(it, "Borg", { depositError = it })
+                },
                 label = { Text("Deposit") },
                 modifier = Modifier.fillMaxWidth(),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                isError = depositError != null,
+                supportingText = depositError?.let { { Text(it) } }
             )
 
             Spacer(modifier = Modifier.height(16.dp))
 
             Button(
                 onClick = {
-                    onSave(
-                        CreateCarRequest(
-                            userId = userId.toLongOrNull(),
-                            make = make,
-                            model = model,
-                            price = price.toFloatOrNull(),
-                            pickupLocation = pickupLocation.ifBlank { null },
-                            category = category.ifBlank { null },
-                            powerSourceType = selectedPowerSource,
-                            color = color.ifBlank { null },
-                            engineType = engineType.ifBlank { null },
-                            enginePower = enginePower.ifBlank { null },
-                            fuelType = fuelType.ifBlank { null },
-                            transmission = transmission.ifBlank { null },
-                            interiorType = interiorType.ifBlank { null },
-                            interiorColor = interiorColor.ifBlank { null },
-                            exteriorType = exteriorType.ifBlank { null },
-                            exteriorFinish = exteriorFinish.ifBlank { null },
-                            wheelSize = wheelSize.ifBlank { null },
-                            wheelType = wheelType.ifBlank { null },
-                            seats = seats.toIntOrNull(),
-                            doors = doors.toIntOrNull(),
-                            modelYear = modelYear.toIntOrNull(),
-                            licensePlate = licensePlate.ifBlank { null },
-                            mileage = mileage.toIntOrNull(),
-                            vinNumber = vinNumber.ifBlank { null },
-                            tradeName = tradeName.ifBlank { null },
-                            bpm = bpm.toFloatOrNull(),
-                            curbWeight = curbWeight.toIntOrNull(),
-                            maxWeight = maxWeight.toIntOrNull(),
-                            firstRegistrationDate = firstRegistrationDate.ifBlank { null },
-                            bookingCost = bookingCost.toFloatOrNull() as String?,
-                            costPerKilometer = costPerKilometer.toFloatOrNull(),
-                            deposit = deposit.toFloatOrNull() as String?,
+                    if (validateAllFields()) {
+                        onSave(
+                            CreateCarRequest(
+                                userId = userId.toLongOrNull(),
+                                make = make,
+                                model = model,
+                                price = price.toFloatOrNull(),
+                                pickupLocation = pickupLocation.ifBlank { null },
+                                category = category.ifBlank { null },
+                                powerSourceType = selectedPowerSource,
+                                color = color.ifBlank { null },
+                                engineType = engineType.ifBlank { null },
+                                enginePower = enginePower.ifBlank { null },
+                                fuelType = fuelType.ifBlank { null },
+                                transmission = transmission.ifBlank { null },
+                                interiorType = interiorType.ifBlank { null },
+                                interiorColor = interiorColor.ifBlank { null },
+                                exteriorType = exteriorType.ifBlank { null },
+                                exteriorFinish = exteriorFinish.ifBlank { null },
+                                wheelSize = wheelSize.ifBlank { null },
+                                wheelType = wheelType.ifBlank { null },
+                                seats = seats.toIntOrNull(),
+                                doors = doors.toIntOrNull(),
+                                modelYear = modelYear.toIntOrNull(),
+                                licensePlate = licensePlate.ifBlank { null },
+                                mileage = mileage.toIntOrNull(),
+                                vinNumber = vinNumber.ifBlank { null },
+                                tradeName = tradeName.ifBlank { null },
+                                bpm = bpm.toFloatOrNull(),
+                                curbWeight = curbWeight.toIntOrNull(),
+                                maxWeight = maxWeight.toIntOrNull(),
+                                firstRegistrationDate = firstRegistrationDate.ifBlank { null },
+                                bookingCost = bookingCost.ifBlank { null },
+                                costPerKilometer = costPerKilometer.toFloatOrNull(),
+                                deposit = deposit.ifBlank { null },
+                            )
                         )
-                    )
+                    }
                 },
                 modifier = Modifier.fillMaxWidth(),
                 enabled = make.isNotBlank() && model.isNotBlank() && !isLoading
