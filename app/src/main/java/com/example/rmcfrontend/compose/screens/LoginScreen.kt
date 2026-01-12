@@ -1,24 +1,20 @@
 package com.example.rmcfrontend.compose.screens
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Button
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Email
+import androidx.compose.material.icons.outlined.Lock
+import androidx.compose.material.icons.outlined.DirectionsCar
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import com.example.rmcfrontend.R
+import com.example.rmcfrontend.compose.components.*
 import com.example.rmcfrontend.compose.viewmodel.AuthState
 import com.example.rmcfrontend.compose.viewmodel.LastAction
 
@@ -31,64 +27,85 @@ fun LoginScreen(
 ) {
     val email = remember { mutableStateOf("") }
     val password = remember { mutableStateOf("") }
+    val scroll = rememberScrollState()
 
     LaunchedEffect(state.lastAction) {
-        if (state.lastAction == LastAction.LOGIN_SUCCESS) {
-            onLoginSuccess()
-        }
+        if (state.lastAction == LastAction.LOGIN_SUCCESS) onLoginSuccess()
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(24.dp),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Text(text = "Login")
-        Spacer(Modifier.height(16.dp))
-
-        OutlinedTextField(
-            value = email.value,
-            onValueChange = { email.value = it },
-            label = { Text("Email") },
-            modifier = Modifier.fillMaxWidth(),
-            singleLine = true
-        )
-        Spacer(Modifier.height(12.dp))
-        OutlinedTextField(
-            value = password.value,
-            onValueChange = { password.value = it },
-            label = { Text("Password") },
-            modifier = Modifier.fillMaxWidth(),
-            singleLine = true,
-            visualTransformation = PasswordVisualTransformation()
-        )
-
-        if (state.errorMessage != null) {
-            Spacer(Modifier.height(12.dp))
-            Text(text = state.errorMessage)
-        }
-
-        Spacer(Modifier.height(16.dp))
-        Button(
-            onClick = { onLogin(email.value.trim(), password.value) },
-            modifier = Modifier.fillMaxWidth(),
-            enabled = !state.isBusy
+    GradientBackground {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(scroll)
+                .padding(20.dp)
         ) {
-            if (state.isBusy) {
-                CircularProgressIndicator(modifier = Modifier.height(18.dp))
-            } else {
-                Text("Login")
+            Spacer(Modifier.height(10.dp))
+            ImageHeroHeader(
+                title = "Start your journey",
+                subtitle = "Log in to track your progress and manage your listings.",
+                imageRes = R.drawable.img_login_header,
+                rightIcon = Icons.Outlined.DirectionsCar
+            )
+            Spacer(Modifier.height(18.dp))
+
+            ElevatedCard(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(26.dp),
+                colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surface)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(18.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Text("Welcome back", style = MaterialTheme.typography.headlineSmall)
+                    Text(
+                        "Use your account to continue.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+
+                    AppTextField(
+                        value = email.value,
+                        onValueChange = { email.value = it },
+                        label = "Email address",
+                        leadingIcon = Icons.Outlined.Email
+                    )
+                    AppTextField(
+                        value = password.value,
+                        onValueChange = { password.value = it },
+                        label = "Password",
+                        leadingIcon = Icons.Outlined.Lock,
+                        visualTransformation = PasswordVisualTransformation()
+                    )
+
+                    if (state.errorMessage != null) {
+                        ErrorPill(message = state.errorMessage)
+                    }
+
+                    GradientButton(
+                        text = "Log in",
+                        onClick = { onLogin(email.value.trim(), password.value) },
+                        loading = state.isBusy
+                    )
+
+                    Text(
+                        text = "or continue with",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    SocialRow(onApple = {}, onGoogle = {})
+
+                    SecondaryPillButton(
+                        text = "Create account",
+                        onClick = onNavigateToRegister,
+                        enabled = !state.isBusy
+                    )
+                }
             }
-        }
-        Spacer(Modifier.height(12.dp))
-        Button(
-            onClick = onNavigateToRegister,
-            modifier = Modifier.fillMaxWidth(),
-            enabled = !state.isBusy
-        ) {
-            Text("Create account")
+            Spacer(Modifier.height(26.dp))
         }
     }
 }

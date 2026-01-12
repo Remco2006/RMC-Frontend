@@ -1,24 +1,21 @@
 package com.example.rmcfrontend.compose.screens
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Button
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Email
+import androidx.compose.material.icons.outlined.Person
+import androidx.compose.material.icons.outlined.Lock
+import androidx.compose.material.icons.outlined.PersonAdd
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import com.example.rmcfrontend.R
+import com.example.rmcfrontend.compose.components.*
 import com.example.rmcfrontend.compose.viewmodel.AuthState
 import com.example.rmcfrontend.compose.viewmodel.LastAction
 
@@ -33,88 +30,104 @@ fun RegisterScreen(
     val last = remember { mutableStateOf("") }
     val email = remember { mutableStateOf("") }
     val password = remember { mutableStateOf("") }
+    val scroll = rememberScrollState()
 
     LaunchedEffect(state.lastAction) {
-        if (state.lastAction == LastAction.REGISTER_SUCCESS) {
-            onRegisterSuccess()
-        }
+        if (state.lastAction == LastAction.REGISTER_SUCCESS) onRegisterSuccess()
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(24.dp),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Text(text = "Create account")
-        Spacer(Modifier.height(16.dp))
-
-        OutlinedTextField(
-            value = first.value,
-            onValueChange = { first.value = it },
-            label = { Text("First name") },
-            modifier = Modifier.fillMaxWidth(),
-            singleLine = true
-        )
-        Spacer(Modifier.height(12.dp))
-        OutlinedTextField(
-            value = last.value,
-            onValueChange = { last.value = it },
-            label = { Text("Last name") },
-            modifier = Modifier.fillMaxWidth(),
-            singleLine = true
-        )
-        Spacer(Modifier.height(12.dp))
-        OutlinedTextField(
-            value = email.value,
-            onValueChange = { email.value = it },
-            label = { Text("Email") },
-            modifier = Modifier.fillMaxWidth(),
-            singleLine = true
-        )
-        Spacer(Modifier.height(12.dp))
-        OutlinedTextField(
-            value = password.value,
-            onValueChange = { password.value = it },
-            label = { Text("Password") },
-            modifier = Modifier.fillMaxWidth(),
-            singleLine = true,
-            visualTransformation = PasswordVisualTransformation()
-        )
-
-        if (state.errorMessage != null) {
-            Spacer(Modifier.height(12.dp))
-            Text(text = state.errorMessage)
-        }
-
-        Spacer(Modifier.height(16.dp))
-        Button(
-            onClick = {
-                onRegister(
-                    first.value.trim(),
-                    last.value.trim(),
-                    email.value.trim(),
-                    password.value
-                )
-            },
-            modifier = Modifier.fillMaxWidth(),
-            enabled = !state.isBusy
+    GradientBackground {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(scroll)
+                .padding(20.dp)
         ) {
-            if (state.isBusy) {
-                CircularProgressIndicator(modifier = Modifier.height(18.dp))
-            } else {
-                Text("Register")
+            Spacer(Modifier.height(10.dp))
+            ImageHeroHeader(
+                title = "Thrilled to join the journey!",
+                subtitle = "Create your account to start your driving lessons today.",
+                imageRes = R.drawable.img_hero_drive,
+                rightIcon = Icons.Outlined.PersonAdd
+            )
+            Spacer(Modifier.height(18.dp))
+
+            ElevatedCard(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(26.dp),
+                colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surface)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(18.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Text("Thrilled to join the journey!", style = MaterialTheme.typography.headlineSmall)
+                    Text(
+                        "Create your account and start using the app.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+
+                    AppTextField(
+                        value = first.value,
+                        onValueChange = { first.value = it },
+                        label = "First name",
+                        leadingIcon = Icons.Outlined.Person
+                    )
+                    AppTextField(
+                        value = last.value,
+                        onValueChange = { last.value = it },
+                        label = "Last name",
+                        leadingIcon = Icons.Outlined.Person
+                    )
+                    AppTextField(
+                        value = email.value,
+                        onValueChange = { email.value = it },
+                        label = "Email address",
+                        leadingIcon = Icons.Outlined.Email
+                    )
+                    AppTextField(
+                        value = password.value,
+                        onValueChange = { password.value = it },
+                        label = "Password",
+                        leadingIcon = Icons.Outlined.Lock,
+                        visualTransformation = PasswordVisualTransformation()
+                    )
+
+                    if (state.errorMessage != null) {
+                        ErrorPill(message = state.errorMessage)
+                    }
+
+                    GradientButton(
+                        text = "Sign up",
+                        onClick = {
+                            onRegister(
+                                first.value.trim(),
+                                last.value.trim(),
+                                email.value.trim(),
+                                password.value
+                            )
+                        },
+                        loading = state.isBusy
+                    )
+
+                    Text(
+                        text = "or connect with",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    SocialRow(onApple = {}, onGoogle = {})
+
+                    SecondaryPillButton(
+                        text = "Back to login",
+                        onClick = onBack,
+                        enabled = !state.isBusy
+                    )
+                }
             }
-        }
-
-        Spacer(Modifier.height(12.dp))
-        Button(
-            onClick = onBack,
-            modifier = Modifier.fillMaxWidth(),
-            enabled = !state.isBusy
-        ) {
-            Text("Back")
+            Spacer(Modifier.height(26.dp))
         }
     }
 }
