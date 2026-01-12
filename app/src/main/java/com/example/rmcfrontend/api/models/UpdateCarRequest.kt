@@ -1,4 +1,4 @@
-package com.example.rmcfrontend.api.models.request
+package com.example.rmcfrontend.api.models
 
 data class UpdateCarRequest(
     val id: Long,
@@ -33,5 +33,4 @@ data class UpdateCarRequest(
     val bookingCost: Float? = null,
     val costPerKilometer: Float? = null,
     val deposit: Float? = null,
-    val imageFileNames: List<String> = emptyList()
 )

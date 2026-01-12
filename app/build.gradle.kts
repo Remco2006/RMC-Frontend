@@ -62,6 +62,7 @@ dependencies {
     implementation("androidx.compose.ui:ui-tooling-preview")
     implementation("androidx.compose.material3:material3")
     debugImplementation("androidx.compose.ui:ui-tooling")
+    implementation("io.coil-kt:coil-compose:2.7.0")
 
     // Compose navigation + lifecycle
     implementation("androidx.navigation:navigation-compose:2.8.3")

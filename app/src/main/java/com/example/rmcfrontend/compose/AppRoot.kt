@@ -5,24 +5,42 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.example.rmcfrontend.api.ApiClient
+import com.example.rmcfrontend.api.models.CreateCarRequest
+import com.example.rmcfrontend.api.models.UpdateCarRequest
 import com.example.rmcfrontend.auth.TokenManager
 import com.example.rmcfrontend.compose.screens.HomeScreen
 import com.example.rmcfrontend.compose.screens.LoginScreen
 import com.example.rmcfrontend.compose.screens.RegisterScreen
 import com.example.rmcfrontend.compose.viewmodel.AuthViewModel
+import com.example.rmcfrontend.compose.viewmodel.CarsViewModel
+import com.example.rmcfrontend.ui.theme.screens.cars.CarDetailsScreen
+import com.example.rmcfrontend.ui.theme.screens.cars.CarsScreen
+import com.example.rmcfrontend.ui.theme.screens.cars.CreateCarScreen
+import com.example.rmcfrontend.ui.theme.screens.cars.EditCarScreen
 
 sealed class Route(val value: String) {
     data object Login : Route("login")
     data object Register : Route("register")
     data object Home : Route("home")
+
+    data object Cars : Route("cars")
+    data object CreateCar : Route("create_car")
+    data object CarDetails : Route("car_details/{carId}") {
+        fun create(carId: Long) = "car_details/$carId"
+    }
+    data object EditCar : Route("edit_car/{carId}") {
+        fun create(carId: Long) = "edit_car/$carId"
+    }
 }
 
 @Composable
-fun AppRoot(tokenManager: TokenManager) {
+fun AppRoot(tokenManager: TokenManager, carsViewModel: CarsViewModel) {
     val navController = rememberNavController()
     val ctx = LocalContext.current
     val authVm = remember { AuthViewModel(tokenManager) }
@@ -77,6 +95,64 @@ fun AppRoot(tokenManager: TokenManager) {
                     navController.navigate(Route.Login.value) {
                         popUpTo(Route.Home.value) { inclusive = true }
                     }
+                }
+            )
+        }
+
+        composable(Route.Cars.value) {
+            CarsScreen(
+                carsViewModel = carsViewModel,
+                onCarClick = { carId -> navController.navigate(Route.CarDetails.create(carId)) },
+                onAddCar = { navController.navigate(Route.CreateCar.value) }
+            )
+        }
+
+        composable(
+            Route.CarDetails.value,
+            arguments = listOf(navArgument("carId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val carId = backStackEntry.arguments?.getString("carId") ?: ""
+            CarDetailsScreen(
+                carId = carId,
+                carsViewModel = carsViewModel,
+                onBack = { navController.popBackStack() },
+                onEdit = { id -> navController.navigate(Route.EditCar.create(id)) },
+                onDelete = { car ->
+                    car.id?.let { carsViewModel.deleteCar(it) }
+                    navController.popBackStack()
+                }
+            )
+        }
+
+        composable(Route.CreateCar.value) {
+            CreateCarScreen(
+                carsViewModel = carsViewModel,
+                onBack = { navController.popBackStack() },
+                onSave = { request: CreateCarRequest ->
+                    carsViewModel.createCar(
+                        request = request,
+                        onSuccess = { navController.popBackStack() }
+                    )
+                }
+            )
+        }
+
+        // ✏️ Edit Car
+        composable(
+            Route.EditCar.value,
+            arguments = listOf(navArgument("carId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val carId = backStackEntry.arguments?.getString("carId") ?: ""
+            EditCarScreen(
+                carId = carId,
+                carsViewModel = carsViewModel,
+                onBack = { navController.popBackStack() },
+                onSave = { request: UpdateCarRequest ->
+                    carsViewModel.updateCar(
+                        id = carId,
+                        request = request,
+                        onSuccess = { navController.popBackStack() }
+                    )
                 }
             )
         }

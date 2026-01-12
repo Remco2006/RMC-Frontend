@@ -7,6 +7,7 @@ import com.example.rmcfrontend.api.ApiClient
 import com.example.rmcfrontend.auth.TokenManager
 import com.example.rmcfrontend.compose.AppRoot
 import com.example.rmcfrontend.compose.theme.RmcTheme
+import com.example.rmcfrontend.compose.viewmodel.CarsViewModel
 
 class MainActivity : ComponentActivity() {
 
@@ -19,7 +20,10 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             RmcTheme {
-                AppRoot(tokenManager = tokenManager)
+                AppRoot(
+                    tokenManager = tokenManager,
+                    carsViewModel = CarsViewModel()
+                )
             }
         }
     }
