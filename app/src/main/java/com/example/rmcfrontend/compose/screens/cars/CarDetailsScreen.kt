@@ -15,11 +15,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import coil.compose.AsyncImage
 import com.example.rmcfrontend.R
 import com.example.rmcfrontend.api.models.Car
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.rmcfrontend.compose.viewmodel.CarsViewModel
+import com.example.rmcfrontend.compose.components.CarImageItem
+import com.example.rmcfrontend.compose.components.CarImagePager
+import com.example.rmcfrontend.util.carImageUrl
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -63,16 +65,30 @@ fun CarDetailsScreen(
                         .fillMaxSize(),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    // Car Image
-                    AsyncImage(
-                        model = c.imageFileNames.firstOrNull()?.let { "http://10.0.2.2:8080/images/$it" } ?: R.drawable.car,
-                        contentDescription = "Car Image",
+                    // Car Images (swipe left/right if multiple)
+                    val imageItems = c.imageFileNames
+                        .mapNotNull { raw ->
+                            val url = carImageUrl(c.id, raw)
+                            if (url.isBlank()) null else CarImageItem.Remote(url)
+                        }
+
+                    CarImagePager(
+                        items = imageItems,
+                        placeholderResId = R.drawable.car,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(200.dp)
-                            .clip(RoundedCornerShape(8.dp)),
-                        contentScale = ContentScale.Crop
+                            .height(220.dp)
+                            .clip(RoundedCornerShape(16.dp)),
+                        showIndicators = imageItems.size > 1
                     )
+
+                    if (imageItems.isNotEmpty()) {
+                        Text(
+                            text = "Swipe left/right to view images.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
 
                     // Title
                     Text(

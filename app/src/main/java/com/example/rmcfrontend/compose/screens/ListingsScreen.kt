@@ -13,15 +13,16 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
-import coil.compose.AsyncImage
 import com.example.rmcfrontend.R
 import com.example.rmcfrontend.api.models.Car
+import com.example.rmcfrontend.compose.components.CarImageItem
+import com.example.rmcfrontend.compose.components.CarImagePager
 import com.example.rmcfrontend.compose.components.ErrorPill
 import com.example.rmcfrontend.compose.components.GradientBackground
 import com.example.rmcfrontend.compose.components.ImageHeroHeader
 import com.example.rmcfrontend.compose.viewmodel.CarsState
+import com.example.rmcfrontend.util.carImageUrl
 
 @Composable
 fun ListingsScreen(
@@ -137,13 +138,16 @@ private fun CarCardItem(car: Car, onClick: () -> Unit) {
                 .padding(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            AsyncImage(
-                model = car.imageFileNames.firstOrNull()?.let { "http://10.0.2.2:8080/images/$it" } ?: R.drawable.car,
-                contentDescription = "Car Image",
+            val imageItems = car.imageFileNames
+                .map { fileName -> CarImageItem.Remote(carImageUrl(car.id, fileName)) }
+
+            CarImagePager(
+                items = imageItems,
+                placeholderResId = R.drawable.car,
                 modifier = Modifier
                     .size(width = 92.dp, height = 70.dp)
                     .clip(RoundedCornerShape(16.dp)),
-                contentScale = ContentScale.Crop
+                showIndicators = imageItems.size > 1
             )
 
             Spacer(Modifier.width(12.dp))

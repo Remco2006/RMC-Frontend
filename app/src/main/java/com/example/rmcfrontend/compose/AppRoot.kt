@@ -128,9 +128,11 @@ fun AppRoot(tokenManager: TokenManager, carsViewModel: CarsViewModel) {
             CreateCarScreen(
                 carsViewModel = carsViewModel,
                 onBack = { navController.popBackStack() },
-                onSave = { request: CreateCarRequest ->
-                    carsViewModel.createCar(
+                onSave = { request, imageUris ->
+                    carsViewModel.createCarWithImages(
+                        context = ctx,
                         request = request,
+                        imageUris = imageUris,
                         onSuccess = { navController.popBackStack() }
                     )
                 }
@@ -147,10 +149,12 @@ fun AppRoot(tokenManager: TokenManager, carsViewModel: CarsViewModel) {
                 carId = carId,
                 carsViewModel = carsViewModel,
                 onBack = { navController.popBackStack() },
-                onSave = { request: UpdateCarRequest ->
-                    carsViewModel.updateCar(
+                onSave = { request, imageUris ->
+                    carsViewModel.updateCarWithImages(
+                        context = ctx,
                         id = carId,
                         request = request,
+                        imageUris = imageUris,
                         onSuccess = { navController.popBackStack() }
                     )
                 }

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- For camera capture output (cacheDir/images) -->
+    <cache-path name="cache_images" path="images/" />
+    <!-- Fallbacks (some OEM camera apps prefer external cache) -->
+    <external-cache-path name="external_cache_images" path="images/" />
+</paths>

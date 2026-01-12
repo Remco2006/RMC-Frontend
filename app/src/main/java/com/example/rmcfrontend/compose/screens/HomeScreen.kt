@@ -1,5 +1,6 @@
 package com.example.rmcfrontend.compose.screens
 
+import android.net.Uri
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.ListAlt
@@ -11,6 +12,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -48,6 +50,7 @@ fun HomeScreen(
     val navController = rememberNavController()
     val carsVm = remember { CarsViewModel() }
     val userVm = remember { UserViewModel(tokenManager) }
+    val context = LocalContext.current
 
     LaunchedEffect(Unit) {
         carsVm.refresh()
@@ -165,9 +168,11 @@ fun HomeScreen(
                 CreateCarScreen(
                     carsViewModel = carsVm,
                     onBack = { navController.popBackStack() },
-                    onSave = { request: CreateCarRequest ->
-                        carsVm.createCar(
+                    onSave = { request: CreateCarRequest, imageUris: List<Uri> ->
+                        carsVm.createCarWithImages(
+                            context = context,
                             request = request,
+                            imageUris = imageUris,
                             onSuccess = {
                                 navController.popBackStack()
                                 carsVm.refresh()
@@ -186,10 +191,12 @@ fun HomeScreen(
                     carId = carId.toString(),
                     carsViewModel = carsVm,
                     onBack = { navController.popBackStack() },
-                    onSave = { request: UpdateCarRequest ->
-                        carsVm.updateCar(
+                    onSave = { request: UpdateCarRequest, imageUris: List<Uri> ->
+                        carsVm.updateCarWithImages(
+                            context = context,
                             id = carId.toString(),
                             request = request,
+                            imageUris = imageUris,
                             onSuccess = {
                                 navController.popBackStack()
                                 carsVm.refresh()

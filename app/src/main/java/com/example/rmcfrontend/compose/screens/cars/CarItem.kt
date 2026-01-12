@@ -23,6 +23,7 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.example.rmcfrontend.api.models.Car
 import com.example.rmcfrontend.R
+import com.example.rmcfrontend.util.carImageUrl
 
 @Composable
 fun CarItem(
@@ -39,7 +40,7 @@ fun CarItem(
         Row(modifier = Modifier.padding(12.dp)) {
 
             AsyncImage(
-                model = car.imageFileNames.firstOrNull()?.let { "http://10.0.2.2:8080/images/$it" },
+                model = car.imageFileNames.firstOrNull()?.let { carImageUrl(car.id, it) },
                 placeholder = painterResource(R.drawable.car),
                 error = painterResource(R.drawable.car),
                 contentDescription = null,

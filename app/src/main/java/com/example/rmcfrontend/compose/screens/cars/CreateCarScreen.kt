@@ -1,33 +1,68 @@
 package com.example.rmcfrontend.ui.theme.screens.cars
 
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import coil.compose.AsyncImage
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.layout.ContentScale
 import com.example.rmcfrontend.api.enums.PowerSourceTypeEnum
 import com.example.rmcfrontend.api.models.CreateCarRequest
 import com.example.rmcfrontend.compose.viewmodel.CarsViewModel
+import com.example.rmcfrontend.util.ImageCaptureUtils
+import com.example.rmcfrontend.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CreateCarScreen(
     onBack: () -> Unit,
-    onSave: (CreateCarRequest) -> Unit,
+    onSave: (CreateCarRequest, List<Uri>) -> Unit,
     carsViewModel: CarsViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
 ) {
     val isLoading by carsViewModel.loading.collectAsState()
     val context = LocalContext.current
+
+    // Images (gallery/camera)
+    val selectedImageUris = remember { mutableStateListOf<Uri>() }
+    var pendingCameraUri by remember { mutableStateOf<Uri?>(null) }
+
+    val pickImagesLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.PickMultipleVisualMedia(maxItems = 5)
+    ) { uris ->
+        if (uris.isNotEmpty()) {
+            // Avoid duplicates
+            uris.filterNot { selectedImageUris.contains(it) }.forEach { selectedImageUris.add(it) }
+        }
+    }
+
+    val takePictureLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.TakePicture()
+    ) { success ->
+        if (success) {
+            pendingCameraUri?.let { selectedImageUris.add(it) }
+        }
+    }
 
     // Basic fields
     var userId by rememberSaveable { mutableStateOf("1") }
@@ -179,6 +214,76 @@ fun CreateCarScreen(
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Text("Basic Information", style = MaterialTheme.typography.titleMedium)
+
+            // Images
+            Text("Images", style = MaterialTheme.typography.titleMedium)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                OutlinedButton(
+                    onClick = {
+                        pickImagesLauncher.launch(
+                            PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                        )
+                    },
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_gallery_black_24dp),
+                        contentDescription = null
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    Text("Gallery")
+                }
+
+                OutlinedButton(
+                    onClick = {
+                        pendingCameraUri = ImageCaptureUtils.createTempImageUri(context)
+                        pendingCameraUri?.let { takePictureLauncher.launch(it) }
+                    },
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_camera_black_24dp),
+                        contentDescription = null
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    Text("Camera")
+                }
+            }
+
+            if (selectedImageUris.isNotEmpty()) {
+                LazyRow(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    items(selectedImageUris) { uri ->
+                        Box {
+                            AsyncImage(
+                                model = uri,
+                                contentDescription = "Selected image",
+                                modifier = Modifier
+                                    .size(110.dp)
+                                    .clip(RoundedCornerShape(12.dp)),
+                                contentScale = ContentScale.Crop
+                            )
+                            IconButton(
+                                onClick = { selectedImageUris.remove(uri) },
+                                modifier = Modifier.align(Alignment.TopEnd)
+                            ) {
+                                Icon(Icons.Default.Delete, contentDescription = "Remove")
+                            }
+                        }
+                    }
+                }
+            } else {
+                Text(
+                    text = "No images selected yet.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
 
             OutlinedTextField(
                 value = userId,
@@ -561,7 +666,8 @@ fun CreateCarScreen(
                                 bookingCost = bookingCost.ifBlank { null },
                                 costPerKilometer = costPerKilometer.toFloatOrNull(),
                                 deposit = deposit.ifBlank { null },
-                            )
+                            ),
+                            selectedImageUris.toList()
                         )
                     }
                 },

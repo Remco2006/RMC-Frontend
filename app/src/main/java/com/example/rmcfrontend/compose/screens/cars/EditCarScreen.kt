@@ -1,30 +1,68 @@
 package com.example.rmcfrontend.ui.theme.screens.cars
 
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import coil.compose.AsyncImage
+import com.example.rmcfrontend.R
 import com.example.rmcfrontend.api.models.UpdateCarRequest
 import com.example.rmcfrontend.compose.viewmodel.CarsViewModel
+import com.example.rmcfrontend.util.ImageCaptureUtils
+import com.example.rmcfrontend.util.carImageUrl
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EditCarScreen(
     carId: String,
     onBack: () -> Unit,
-    onSave: (UpdateCarRequest) -> Unit,
+    onSave: (UpdateCarRequest, List<Uri>) -> Unit,
     carsViewModel: CarsViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
 ) {
     val car by carsViewModel.getCar(carId).collectAsState(initial = null)
     val isLoading by carsViewModel.loading.collectAsState()
+
+    val context = LocalContext.current
+
+    // New images selected locally (uploaded after update)
+    val selectedImageUris = remember { mutableStateListOf<Uri>() }
+    var pendingCameraUri by remember { mutableStateOf<Uri?>(null) }
+
+    val pickImagesLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.PickMultipleVisualMedia(maxItems = 5)
+    ) { uris ->
+        if (uris.isNotEmpty()) {
+            uris.filterNot { selectedImageUris.contains(it) }.forEach { selectedImageUris.add(it) }
+        }
+    }
+
+    val takePictureLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.TakePicture()
+    ) { success ->
+        if (success) {
+            pendingCameraUri?.let { selectedImageUris.add(it) }
+        }
+    }
 
     // Use car data directly, fallback to empty string
     val make = remember(car) { mutableStateOf(car?.make ?: "") }
@@ -169,6 +207,114 @@ fun EditCarScreen(
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 Text("Basic Information", style = MaterialTheme.typography.titleMedium)
+
+                // Images
+                Text("Images", style = MaterialTheme.typography.titleMedium)
+
+                // Combine existing remote images + newly selected local images into one swipeable pager.
+                val existingFileNames = car?.imageFileNames ?: emptyList()
+                val existingItems = existingFileNames.map { fileName ->
+                    com.example.rmcfrontend.compose.components.CarImageItem.Remote(
+                        carImageUrl(car?.id, fileName)
+                    )
+                }
+                val newItems = selectedImageUris.map { uri ->
+                    com.example.rmcfrontend.compose.components.CarImageItem.Local(uri)
+                }
+                val allItems = existingItems + newItems
+
+                com.example.rmcfrontend.compose.components.CarImagePager(
+                    items = allItems,
+                    placeholderResId = R.drawable.car,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(220.dp)
+                        .clip(RoundedCornerShape(16.dp)),
+                    showIndicators = allItems.size > 1,
+                    allowDeleteLocal = true,
+                    onDeleteLocal = { uri -> selectedImageUris.remove(uri) }
+                )
+
+                Text(
+                    text = if (existingItems.isEmpty() && newItems.isEmpty()) "No images yet. Add from Gallery or Camera." else "Swipe left/right to view images.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    OutlinedButton(
+                        onClick = {
+                            pickImagesLauncher.launch(
+                                PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                            )
+                        },
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_gallery_black_24dp),
+                            contentDescription = null
+                        )
+                        Spacer(Modifier.width(8.dp))
+                        Text("Gallery")
+                    }
+
+                    OutlinedButton(
+                        onClick = {
+                            pendingCameraUri = ImageCaptureUtils.createTempImageUri(context)
+                            pendingCameraUri?.let { takePictureLauncher.launch(it) }
+                        },
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_camera_black_24dp),
+                            contentDescription = null
+                        )
+                        Spacer(Modifier.width(8.dp))
+                        Text("Camera")
+                    }
+                }
+
+                // Allow removing newly selected (local) images before saving.
+                // Removing already uploaded images is not supported by the current backend.
+                if (selectedImageUris.isNotEmpty()) {
+                    Text(
+                        text = "New images to upload (tap X to remove):",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+
+                    LazyRow(
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        items(selectedImageUris.toList(), key = { it.toString() }) { uri ->
+                            Box(
+                                modifier = Modifier
+                                    .size(74.dp)
+                                    .clip(RoundedCornerShape(14.dp))
+                            ) {
+                                AsyncImage(
+                                    model = uri,
+                                    contentDescription = "Selected image",
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentScale = ContentScale.Crop,
+                                    placeholder = painterResource(R.drawable.car),
+                                    error = painterResource(R.drawable.car)
+                                )
+
+                                IconButton(
+                                    onClick = { selectedImageUris.remove(uri) },
+                                    modifier = Modifier.align(Alignment.TopEnd)
+                                ) {
+                                    Icon(Icons.Default.Delete, contentDescription = "Remove")
+                                }
+                            }
+                        }
+                    }
+                }
 
                 OutlinedTextField(
                     value = make.value,
@@ -544,7 +690,7 @@ fun EditCarScreen(
                                     costPerKilometer = costPerKilometer.value.toFloatOrNull(),
                                     deposit = deposit.value.toFloatOrNull()
                                 )
-                                onSave(request)
+                                onSave(request, selectedImageUris.toList())
                             }
                         }
                     },
