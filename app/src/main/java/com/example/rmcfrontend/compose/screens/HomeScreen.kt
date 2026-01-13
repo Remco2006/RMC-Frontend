@@ -7,6 +7,7 @@ import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material.icons.outlined.ListAlt
 import androidx.compose.material.icons.outlined.Map
 import androidx.compose.material.icons.outlined.Person
+import androidx.compose.material.icons.outlined.Description
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -29,9 +30,11 @@ import com.example.rmcfrontend.api.models.UpdateCarRequest
 import com.example.rmcfrontend.auth.TokenManager
 import com.example.rmcfrontend.compose.screens.reservations.CreateReservationScreen
 import com.example.rmcfrontend.compose.screens.reservations.ReservationsScreen
+import com.example.rmcfrontend.compose.screens.terms.TermsScreen
 import com.example.rmcfrontend.compose.viewmodel.CarSearchViewModel
 import com.example.rmcfrontend.compose.viewmodel.CarsViewModel
 import com.example.rmcfrontend.compose.viewmodel.ReservationsViewModel
+import com.example.rmcfrontend.compose.viewmodel.TermsViewModel
 import com.example.rmcfrontend.compose.viewmodel.UserViewModel
 import com.example.rmcfrontend.ui.theme.screens.cars.CarDetailsScreen
 import com.example.rmcfrontend.ui.theme.screens.cars.CreateCarScreen
@@ -43,6 +46,7 @@ sealed class HomeRoute(val value: String) {
     data object Listings : HomeRoute("listings")
     data object Map : HomeRoute("map")
     data object Reservations : HomeRoute("reservations")
+    data object Terms : HomeRoute("terms")
     data object User : HomeRoute("user")
     data object CarDetails : HomeRoute("car/{carId}") {
         fun create(carId: Long) = "car/$carId"
@@ -64,12 +68,15 @@ fun HomeScreen(
     val navController = rememberNavController()
     val carsVm = remember { CarsViewModel() }
     val userVm = remember { UserViewModel(tokenManager) }
+    val termsVm = remember { TermsViewModel() }
     val reservationsVm = remember { ReservationsViewModel() }
     val context = LocalContext.current
+
 
     LaunchedEffect(Unit) {
         carsVm.refresh()
         userVm.loadMe()
+        termsVm.load()
         reservationsVm.loadReservations()
     }
 
@@ -80,6 +87,7 @@ fun HomeScreen(
         currentRoute == HomeRoute.Listings.value || currentRoute?.startsWith("car/") == true -> HomeRoute.Listings.value
         currentRoute == HomeRoute.Map.value -> HomeRoute.Map.value
         currentRoute == HomeRoute.Reservations.value || currentRoute?.startsWith("reservations/") == true -> HomeRoute.Reservations.value
+        currentRoute == HomeRoute.Terms.value -> HomeRoute.Terms.value
         currentRoute == HomeRoute.User.value -> HomeRoute.User.value
         else -> HomeRoute.Listings.value
     }
@@ -92,7 +100,7 @@ fun HomeScreen(
                     HomeRoute.Map.value,
                     HomeRoute.Reservations.value,
                     HomeRoute.User.value
-                )) {
+                , HomeRoute.Terms.value)) {
                 NavigationBar(
                     containerColor = MaterialTheme.colorScheme.surface,
                     tonalElevation = 10.dp
@@ -133,7 +141,26 @@ fun HomeScreen(
                             unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     )
+                    
                     NavigationBarItem(
+                        selected = selected == HomeRoute.Terms.value,
+                        onClick = {
+                            navController.navigate(HomeRoute.Terms.value) {
+                                popUpTo(HomeRoute.Listings.value)
+                                launchSingleTop = true
+                            }
+                        },
+                        label = { Text("Terms") },
+                        icon = { Icon(Icons.Outlined.Description, contentDescription = null) },
+                        colors = NavigationBarItemDefaults.colors(
+                            indicatorColor = MaterialTheme.colorScheme.primaryContainer,
+                            selectedIconColor = MaterialTheme.colorScheme.primary,
+                            selectedTextColor = MaterialTheme.colorScheme.primary,
+                            unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                            unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    )
+NavigationBarItem(
                         selected = selected == HomeRoute.User.value,
                         onClick = {
                             navController.navigate(HomeRoute.User.value) {
@@ -166,7 +193,8 @@ fun HomeScreen(
                     state = carsVm.state.value,
                     onRefresh = { carsVm.refresh() },
                     onCarClick = { carId -> navController.navigate(HomeRoute.CarDetails.create(carId)) },
-                    onAddCar = { navController.navigate(HomeRoute.CreateCar.value) }
+                    onAddCar = { navController.navigate(HomeRoute.CreateCar.value) },
+                    onTerms = { navController.navigate(HomeRoute.Terms.value) }
                 )
             }
 
@@ -267,7 +295,8 @@ fun HomeScreen(
                 LaunchedEffect(selectedCarId) {
                     selectedCarId?.let { carId ->
                         reservationsVm.loadCarReservations(carId)
-                        reservationsVm.loadTerms()
+                        val uid = userVm.state.value.user?.id ?: 1
+                        reservationsVm.loadTerms(uid)
                     }
                 }
 
@@ -303,10 +332,18 @@ fun HomeScreen(
             }
 
             // User settings route
-            composable(HomeRoute.User.value) {
+            
+            composable(HomeRoute.Terms.value) {
+                TermsScreen(vm = termsVm)
+            }
+
+composable(HomeRoute.User.value) {
                 UserSettingsScreen(
                     state = userVm.state.value,
-                    onReload = { userVm.loadMe() },
+                    onReload = {
+                        userVm.loadMe()
+                        termsVm.load()
+                    },
                     onSave = { f, l, e -> userVm.save(f, l, e) },
                     onDisable = { userVm.disableAccount(onDisabled = onLogout) },
                     onLogout = onLogout

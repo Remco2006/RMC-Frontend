@@ -33,8 +33,7 @@ data class ReservationsUiState(
 class ReservationsViewModel(
     private val reservationsApi: ReservationsApi = ApiClient.reservationsApi,
     private val carsApi: CarsApi = ApiClient.carsApi,
-    private val termsApi: TermsApi = ApiClient.termsApi,
-    private var userId: Long = 1
+    private val termsApi: TermsApi = ApiClient.termsApi
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ReservationsUiState())
@@ -101,7 +100,7 @@ class ReservationsViewModel(
         }
     }
 
-    fun loadTerms() {
+    fun loadTerms(userId: Long) {
         viewModelScope.launch {
             try {
                 val terms = termsApi.getActiveTermForUser(userId)
