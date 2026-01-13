@@ -65,6 +65,11 @@ dependencies {
     implementation(libs.androidx.animation)
     debugImplementation("androidx.compose.ui:ui-tooling")
     implementation("io.coil-kt:coil-compose:2.7.0")
+    testImplementation("junit:junit:4.13.2")
+    testImplementation("androidx.arch.core:core-testing:2.2.0")
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3")
+    testImplementation("io.mockk:mockk:1.13.8")
+    testImplementation("io.mockk:mockk-android:1.13.8")
 
     // Compose navigation + lifecycle
     implementation("androidx.navigation:navigation-compose:2.8.3")
