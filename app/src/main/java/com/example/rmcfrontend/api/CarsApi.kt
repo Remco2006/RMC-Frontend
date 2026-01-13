@@ -1,6 +1,7 @@
 package com.example.rmcfrontend.api
 
 import com.example.rmcfrontend.api.models.Car
+import com.example.rmcfrontend.api.models.CarSearchFilterRequest
 import com.example.rmcfrontend.api.models.CreateCarRequest
 import com.example.rmcfrontend.api.models.UpdateCarRequest
 import com.example.rmcfrontend.api.models.response.CarsResponse
@@ -43,4 +44,7 @@ interface CarsApi {
     ): Car
     @DELETE("cars/{id}")
     suspend fun deleteCar(@Path("id") id: String)
+
+    @POST("cars/search")
+    suspend fun searchCars(@Body filter: CarSearchFilterRequest): CarsResponse
 }

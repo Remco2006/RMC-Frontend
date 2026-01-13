@@ -12,7 +12,7 @@ android {
 
     defaultConfig {
         applicationId = "com.example.rmcfrontend"
-        minSdk = 24
+        minSdk = 26
         targetSdk = 36
         versionCode = 1
         versionName = "1.0"
@@ -62,6 +62,7 @@ dependencies {
     implementation("androidx.compose.ui:ui-tooling-preview")
     implementation("androidx.compose.material3:material3")
     implementation("androidx.compose.material:material-icons-extended")
+    implementation(libs.androidx.animation)
     debugImplementation("androidx.compose.ui:ui-tooling")
     implementation("io.coil-kt:coil-compose:2.7.0")
 
@@ -76,4 +77,8 @@ dependencies {
     // App theme resources still depend on these.
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
+
+    //map
+    implementation("com.google.maps.android:maps-compose:2.11.4")
+    implementation("com.google.android.gms:play-services-maps:18.2.0")
 }
