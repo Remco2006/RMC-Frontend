@@ -65,7 +65,6 @@ fun CreateCarScreen(
     }
 
     // Basic fields
-    var userId by rememberSaveable { mutableStateOf("1") }
     var make by rememberSaveable { mutableStateOf("") }
     var model by rememberSaveable { mutableStateOf("") }
     var price by rememberSaveable { mutableStateOf("") }
@@ -178,7 +177,6 @@ fun CreateCarScreen(
 
     fun validateAllFields(): Boolean {
         val validations = listOf(
-            validateInteger(userId, "User ID", { userIdError = it }),
             validateFloat(price, "Prijs", { priceError = it }),
             validateInteger(seats, "Stoelen", { seatsError = it }),
             validateInteger(doors, "Deuren", { doorsError = it }),
@@ -286,19 +284,6 @@ fun CreateCarScreen(
             }
 
             OutlinedTextField(
-                value = userId,
-                onValueChange = {
-                    userId = it
-                    validateInteger(it, "User ID", { userIdError = it })
-                },
-                label = { Text("User ID") },
-                modifier = Modifier.fillMaxWidth(),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                isError = userIdError != null,
-                supportingText = userIdError?.let { { Text(it) } }
-            )
-
-            OutlinedTextField(
                 value = make,
                 onValueChange = { make = it },
                 label = { Text("Make *") },
@@ -360,7 +345,7 @@ fun CreateCarScreen(
                     expanded = powerSourceExpanded,
                     onDismissRequest = { powerSourceExpanded = false }
                 ) {
-                    PowerSourceTypeEnum.values().forEach { powerSource ->
+                    PowerSourceTypeEnum.entries.forEach { powerSource ->
                         DropdownMenuItem(
                             text = { Text(powerSource.name) },
                             onClick = {
@@ -634,7 +619,6 @@ fun CreateCarScreen(
                     if (validateAllFields()) {
                         onSave(
                             CreateCarRequest(
-                                userId = userId.toLongOrNull(),
                                 make = make,
                                 model = model,
                                 price = price.toFloatOrNull(),

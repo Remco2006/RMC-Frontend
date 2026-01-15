@@ -3,7 +3,6 @@ package com.example.rmcfrontend.api.models
 import com.example.rmcfrontend.api.enums.PowerSourceTypeEnum
 
 data class CreateCarRequest(
-    val userId: Long?,
     val make: String,
     val model: String?,
     val price: Float?,

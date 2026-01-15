@@ -213,7 +213,6 @@ class CarsViewModelTest {
             bookingCost = "100",
             costPerKilometer = 0.29f,
             deposit = "100",
-            userId = 1
         )
         var successCalled = false
 
@@ -268,7 +267,6 @@ class CarsViewModelTest {
             bookingCost = "25",
             costPerKilometer = 0.29f,
             deposit = "100",
-            userId = 1,
         )
         val errorMessage = "Failed to create"
         var successCalled = false

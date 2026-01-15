@@ -33,6 +33,11 @@ import com.example.rmcfrontend.api.models.response.GetTermResponse
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
+import androidx.compose.material3.Text
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.draw.clip
+import androidx.compose.material.icons.filled.CheckCircle
+import com.example.rmcfrontend.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -1102,13 +1107,15 @@ fun CarSelectionCard(
     ) {
         Row(
             modifier = Modifier.padding(12.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
             AsyncImage(
-                model = car.imageFileNames.firstOrNull() ?: "",
-                contentDescription = "${car.make} ${car.model}",
-                modifier = Modifier.size(70.dp),
-                contentScale = ContentScale.Crop
+                model = car.imageFileNames.firstOrNull()?.let { "http://10.0.2.2:8080/images/$it" }
+                    ?: R.drawable.car,
+                contentDescription = "Car Image",
+                modifier = Modifier.size(88.dp, 64.dp),
+                contentScale = androidx.compose.ui.layout.ContentScale.Crop
             )
 
             Column(
@@ -1134,12 +1141,15 @@ fun CarSelectionCard(
                 Icon(
                     Icons.Default.CheckCircle,
                     contentDescription = "Geselecteerd",
-                    tint = MaterialTheme.colorScheme.primary
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(24.dp)
                 )
             }
         }
     }
 }
+
+
 
 @Composable
 fun TimeSelectionSection(

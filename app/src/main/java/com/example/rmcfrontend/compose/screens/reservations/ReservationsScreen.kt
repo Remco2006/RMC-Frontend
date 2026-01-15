@@ -24,6 +24,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+import com.example.rmcfrontend.R
 import com.example.rmcfrontend.api.models.Car
 import com.example.rmcfrontend.api.models.Reservation
 import java.time.LocalDate
@@ -242,12 +243,11 @@ fun UpcomingReservationCard(
                 // Auto afbeelding
                 if (car != null && car.imageFileNames.isNotEmpty()) {
                     AsyncImage(
-                        model = "${car.imageFileNames.first()}",
-                        contentDescription = "Auto afbeelding",
-                        modifier = Modifier
-                            .size(100.dp)
-                            .clip(RoundedCornerShape(8.dp)),
-                        contentScale = ContentScale.Crop
+                        model = car.imageFileNames.firstOrNull()?.let { "http://10.0.2.2:8080/images/$it" }
+                            ?: R.drawable.car,
+                        contentDescription = "Car Image",
+                        modifier = Modifier.size(88.dp, 64.dp),
+                        contentScale = androidx.compose.ui.layout.ContentScale.Crop
                     )
                 } else {
                     Box(
