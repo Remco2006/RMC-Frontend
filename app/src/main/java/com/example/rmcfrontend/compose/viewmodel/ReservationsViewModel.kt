@@ -95,7 +95,7 @@ class ReservationsViewModel(
                 )
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
-                    error = "Kon reserveringen niet laden: ${e.message}"
+//                    error = "Kon reserveringen niet laden: ${e.message}"
                 )
             }
         }
