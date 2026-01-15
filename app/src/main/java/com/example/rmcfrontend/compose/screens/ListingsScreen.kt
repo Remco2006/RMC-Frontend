@@ -29,7 +29,8 @@ fun ListingsScreen(
     state: CarsState,
     onRefresh: () -> Unit,
     onCarClick: (Long) -> Unit,
-    onAddCar: () -> Unit
+    onAddCar: () -> Unit,
+    onTerms: () -> Unit = {}
 ) {
     GradientBackground {
         Box(modifier = Modifier.fillMaxSize()) {
@@ -92,7 +93,16 @@ fun ListingsScreen(
                                 )
                             }
                             state.cars.isNotEmpty() -> {
-                                LazyColumn(
+                                
+            Spacer(Modifier.height(12.dp))
+            OutlinedButton(
+                onClick = onTerms,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Terms & Conditions")
+            }
+            Spacer(Modifier.height(12.dp))
+LazyColumn(
                                     modifier = Modifier.fillMaxWidth(),
                                     contentPadding = PaddingValues(vertical = 6.dp),
                                     verticalArrangement = Arrangement.spacedBy(10.dp)

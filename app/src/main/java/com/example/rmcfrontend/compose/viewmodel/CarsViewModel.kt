@@ -42,7 +42,7 @@ class CarsViewModel(private val api: CarsApi = ApiClient.carsApi) : ViewModel() 
         _state.value = _state.value.copy(isBusy = true, errorMessage = null)
         viewModelScope.launch {
             try {
-                val response = api.getAllCars()
+                val response = api.getMyCars()
                 _state.value = CarsState(isBusy = false, cars = response.GetCarResponseList)
             } catch (e: Exception) {
                 _state.value = CarsState(isBusy = false, errorMessage = e.message ?: "Unknown error")

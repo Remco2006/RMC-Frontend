@@ -103,7 +103,6 @@ fun CarDetailsScreen(
                         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
                     ) {
                         Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                            DetailRow("User ID", c.userId?.toString())
                             DetailRow("Car ID", c.id?.toString())
                             DetailRow("Make", c.make)
                             DetailRow("Model", c.model)

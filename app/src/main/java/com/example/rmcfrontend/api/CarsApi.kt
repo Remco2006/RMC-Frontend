@@ -18,6 +18,10 @@ import retrofit2.http.Path
 interface CarsApi {
     @GET("cars")
     suspend fun getAllCars(): CarsResponse
+
+    @GET("cars/my-cars")
+    suspend fun getMyCars(): CarsResponse
+
     @GET("cars/{id}")
     suspend fun getCar(
         @Path("id") carId: String
