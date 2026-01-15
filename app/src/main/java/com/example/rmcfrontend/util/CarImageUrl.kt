@@ -9,20 +9,10 @@ import com.example.rmcfrontend.api.ApiClient
  * server constructs responses, you may also encounter full URLs in the DB/response such as:
  *   - http://localhost:8080/uploads/cars/<uuid>.jpg
  *   - http://localhost:8080/uploads/cars/http://localhost:8080/uploads/cars/<uuid>.jpg
- *
- * We cannot change what the backend stores without editing AvansAPI, so on Android we normalize
- * to the filename and then rebuild a reachable URL using ApiClient.BASE_URL.
  */
 fun carImageUrl(carId: Long?, rawValue: String): String {
-    // We do NOT change AvansAPI. Instead, we normalize whatever the API returns (filename or URL)
-    // into a URL that is reachable from the Android device.
-    //
     // Based on your screenshots/DB, images are served under:
     //   /uploads/cars/<fileName>
-    //
-    // Some rows may contain full URLs (often with localhost) or duplicated URLs.
-    // We extract a stable path/filename and then rebuild a URL using ApiClient.BASE_URL.
-
     val base = ApiClient.BASE_URL.trimEnd('/')
     val normalized = normalizeRawImageValue(rawValue)
     if (normalized.isBlank()) return ""
