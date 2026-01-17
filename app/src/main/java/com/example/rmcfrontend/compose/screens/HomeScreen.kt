@@ -1,11 +1,12 @@
 package com.example.rmcfrontend.compose.screens
 
+import android.content.Intent
 import android.net.Uri
+import android.os.Build
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material.icons.outlined.ListAlt
-import androidx.compose.material.icons.outlined.Map
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.outlined.Description
 import androidx.compose.material3.*
@@ -28,12 +29,14 @@ import androidx.navigation.navArgument
 import com.example.rmcfrontend.api.models.CreateCarRequest
 import com.example.rmcfrontend.api.models.UpdateCarRequest
 import com.example.rmcfrontend.auth.TokenManager
+import com.example.rmcfrontend.compose.RequestLocationPermission
 import com.example.rmcfrontend.compose.screens.reservations.CreateReservationScreen
-import com.example.rmcfrontend.compose.screens.reservations.ReservationsScreen
 import com.example.rmcfrontend.compose.screens.terms.TermsScreen
+import com.example.rmcfrontend.service.ActiveTripService
 import com.example.rmcfrontend.compose.viewmodel.CarSearchViewModel
 import com.example.rmcfrontend.compose.viewmodel.CarsViewModel
 import com.example.rmcfrontend.compose.viewmodel.ReservationsViewModel
+import com.example.rmcfrontend.compose.viewmodel.TelemetryViewModel
 import com.example.rmcfrontend.compose.viewmodel.TermsViewModel
 import com.example.rmcfrontend.compose.viewmodel.UserViewModel
 import com.example.rmcfrontend.ui.theme.screens.cars.CarDetailsScreen
@@ -41,6 +44,13 @@ import com.example.rmcfrontend.ui.theme.screens.cars.CreateCarScreen
 import com.example.rmcfrontend.ui.theme.screens.cars.EditCarScreen
 import java.time.LocalDate
 import java.time.LocalDateTime
+import android.Manifest
+import android.content.Context
+import android.content.pm.PackageManager
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
+import com.example.rmcfrontend.api.models.Car
 
 sealed class HomeRoute(val value: String) {
     data object Listings : HomeRoute("listings")
@@ -58,6 +68,10 @@ sealed class HomeRoute(val value: String) {
     data object CreateReservation : HomeRoute("reservations/create/{date}") {
         fun create(date: LocalDate) = "reservations/create/${date}"
     }
+
+    data object ActiveTrip : HomeRoute("trip/active/{reservationId}/{carId}") {
+        fun create(reservationId: Long, carId: Long) = "trip/active/$reservationId/$carId"
+    }
 }
 
 @Composable
@@ -69,9 +83,146 @@ fun HomeScreen(
     val carsVm = remember { CarsViewModel() }
     val userVm = remember { UserViewModel(tokenManager) }
     val termsVm = remember { TermsViewModel() }
+    val telemetryVm = remember { TelemetryViewModel() }
     val reservationsVm = remember { ReservationsViewModel() }
     val context = LocalContext.current
 
+    var showPermissionDialog by remember { mutableStateOf(false) }
+    var showSettingsDialog by remember { mutableStateOf(false) } // ✅ NIEUW
+    var pendingTripStart by remember { mutableStateOf<Triple<Long, Long, Car?>?>(null) }
+
+    LaunchedEffect(Unit) {
+        android.util.Log.d("HomeScreen", "🎬 HomeScreen initialized")
+    }
+
+    val permissions = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        arrayOf(
+            Manifest.permission.ACCESS_FINE_LOCATION,
+            Manifest.permission.ACCESS_COARSE_LOCATION,
+            Manifest.permission.POST_NOTIFICATIONS
+        )
+    } else {
+        arrayOf(
+            Manifest.permission.ACCESS_FINE_LOCATION,
+            Manifest.permission.ACCESS_COARSE_LOCATION
+        )
+    }
+
+    val permissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { permissionsMap ->
+        val allGranted = permissionsMap.values.all { it }
+
+        android.util.Log.d("HomeScreen", "Permission result: $permissionsMap")
+
+        if (allGranted) {
+            android.util.Log.d("HomeScreen", "✅ All permissions granted!")
+            pendingTripStart?.let { (reservationId, carId, car) ->
+                startTripService(context, reservationId, carId, userVm.state.value.user?.id ?: 1L)
+                navController.navigate(HomeRoute.ActiveTrip.create(reservationId, carId))
+                pendingTripStart = null
+            }
+        } else {
+            android.util.Log.e("HomeScreen", "❌ Permissions denied: $permissionsMap")
+
+            // ✅ Check of permanent geweigerd
+            val permanentlyDenied = permissionsMap.any { (permission, granted) ->
+                !granted && !(context as? android.app.Activity)?.shouldShowRequestPermissionRationale(permission)!! ?: false
+            }
+
+            if (permanentlyDenied) {
+                showSettingsDialog = true
+            } else {
+                showPermissionDialog = true
+            }
+        }
+    }
+
+    fun startTripWithPermissionCheck(reservationId: Long, carId: Long, car: Car?) {
+        permissions.forEach { permission ->
+            val status = ContextCompat.checkSelfPermission(context, permission)
+            android.util.Log.d("Permissions", "$permission: ${if (status == PackageManager.PERMISSION_GRANTED) "✅ GRANTED" else "❌ DENIED"}")
+        }
+
+        val hasAllPermissions = permissions.all { permission ->
+            ContextCompat.checkSelfPermission(context, permission) == PackageManager.PERMISSION_GRANTED
+        }
+
+        if (hasAllPermissions) {
+            android.util.Log.d("HomeScreen", "✅ Permissions already granted")
+            startTripService(context, reservationId, carId, userVm.state.value.user?.id ?: 1L)
+            navController.navigate(HomeRoute.ActiveTrip.create(reservationId, carId))
+        } else {
+            android.util.Log.d("HomeScreen", "❓ Requesting permissions...")
+            pendingTripStart = Triple(reservationId, carId, car)
+            permissionLauncher.launch(permissions)
+        }
+    }
+
+    // ✅ Dialog voor normale weigering
+    if (showPermissionDialog) {
+        AlertDialog(
+            onDismissRequest = {
+                showPermissionDialog = false
+                pendingTripStart = null
+            },
+            title = { Text("Locatie toegang vereist") },
+            text = {
+                Text("Deze app heeft toegang tot je locatie nodig om je rit te kunnen bijhouden. Zonder deze toestemming kunnen we je rit niet tracken.")
+            },
+            confirmButton = {
+                Button(onClick = {
+                    showPermissionDialog = false
+                    permissionLauncher.launch(permissions)
+                }) {
+                    Text("Probeer opnieuw")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = {
+                    showPermissionDialog = false
+                    pendingTripStart = null
+                }) {
+                    Text("Annuleren")
+                }
+            }
+        )
+    }
+
+    // ✅ NIEUW: Dialog voor permanente weigering
+    if (showSettingsDialog) {
+        AlertDialog(
+            onDismissRequest = {
+                showSettingsDialog = false
+                pendingTripStart = null
+            },
+            title = { Text("Toestemming permanent geweigerd") },
+            text = {
+                Text("Je hebt locatietoegang permanent geweigerd. Om ritten te kunnen starten, moet je deze toestemming handmatig inschakelen in de app-instellingen.")
+            },
+            confirmButton = {
+                Button(onClick = {
+                    showSettingsDialog = false
+                    // Open app settings
+                    val intent = Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                        data = Uri.parse("package:${context.packageName}")
+                    }
+                    context.startActivity(intent)
+                    pendingTripStart = null
+                }) {
+                    Text("Open Instellingen")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = {
+                    showSettingsDialog = false
+                    pendingTripStart = null
+                }) {
+                    Text("Annuleren")
+                }
+            }
+        )
+    }
 
     LaunchedEffect(Unit) {
         carsVm.refresh()
@@ -268,9 +419,39 @@ NavigationBarItem(
                 ReservationsScreen(
                     reservations = uiState.reservations,
                     cars = carsState.cars,
+                    userId = userVm.state.value.user?.id ?: 1L,
                     onDateSelected = {},
                     onCreateReservation = { selectedDate ->
                         navController.navigate(HomeRoute.CreateReservation.create(selectedDate))
+                    },
+                    onStartTrip = { reservationId, carId, car ->
+                        startTripWithPermissionCheck(reservationId, carId, car)
+                    }
+                )
+            }
+
+            composable(
+                route = HomeRoute.ActiveTrip.value,
+                arguments = listOf(
+                    navArgument("reservationId") { type = NavType.LongType },
+                    navArgument("carId") { type = NavType.LongType }
+                )
+            ) { backStackEntry ->
+                val reservationId = backStackEntry.arguments?.getLong("reservationId") ?: 0L
+                val carId = backStackEntry.arguments?.getLong("carId") ?: 0L
+                val car = carsVm.state.value.cars.find { it.id == carId }
+
+                ActiveTripScreen(
+                    carId = carId,
+                    userId = userVm.state.value.user?.id ?: 1L,
+                    reservationId = reservationId,
+                    car = car,
+                    telemetryViewModel = telemetryVm,
+                    onStopTrip = {
+                        userVm.state.value.user?.id?.let { userId ->
+                            telemetryVm.loadTripsForUser(userId)
+                        }
+                        navController.popBackStack()
                     }
                 )
             }
@@ -350,5 +531,19 @@ composable(HomeRoute.User.value) {
                 )
             }
         }
+    }
+}
+
+private fun startTripService(context: Context, reservationId: Long, carId: Long, userId: Long) {
+    val serviceIntent = Intent(context, ActiveTripService::class.java).apply {
+        putExtra(ActiveTripService.EXTRA_RESERVATION_ID, reservationId)
+        putExtra(ActiveTripService.EXTRA_CAR_ID, carId)
+        putExtra(ActiveTripService.EXTRA_USER_ID, userId)
+    }
+
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        context.startForegroundService(serviceIntent)
+    } else {
+        context.startService(serviceIntent)
     }
 }

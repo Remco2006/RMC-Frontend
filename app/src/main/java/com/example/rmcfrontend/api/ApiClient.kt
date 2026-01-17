@@ -1,5 +1,6 @@
 package com.example.rmcfrontend.api
 
+import com.example.rmcfrontend.api.models.TelemetryApiInterface
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
@@ -56,4 +57,5 @@ object ApiClient {
     val usersApi: UsersApi = retrofit.create(UsersApi::class.java)
     val termsApi: TermsApi = retrofit.create(TermsApi::class.java)
     val reservationsApi: ReservationsApi = retrofit.create(ReservationsApi::class.java)
+    val telemetryAPi: TelemetryApiInterface = retrofit.create(TelemetryApiInterface::class.java)
 }

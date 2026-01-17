@@ -1,4 +1,4 @@
-package com.example.rmcfrontend.compose.screens.reservations
+package com.example.rmcfrontend.compose.screens
 
 import android.content.Intent
 import android.net.Uri
@@ -13,6 +13,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -24,41 +25,68 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
-import com.example.rmcfrontend.R
 import com.example.rmcfrontend.api.models.Car
 import com.example.rmcfrontend.api.models.Reservation
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.format.TextStyle
 import java.util.*
-
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ReservationsScreen(
     reservations: List<Reservation>,
     cars: List<Car>,
+    userId: Long,
     onDateSelected: (LocalDate) -> Unit,
     onCreateReservation: (LocalDate) -> Unit,
+    onStartTrip: (Long, Long, Car?) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    var selectedDate by remember {
-        mutableStateOf(LocalDate.now())
-    }
-
+    var selectedDate by remember { mutableStateOf(LocalDate.now()) }
     val context = LocalContext.current
+    val now = LocalDateTime.now()
+
+    LaunchedEffect(Unit) {
+        android.util.Log.d("ReservationsScreen", "📅 Current time: $now")
+        android.util.Log.d("ReservationsScreen", "📅 Selected date: $selectedDate")
+        android.util.Log.d("ReservationsScreen", "📋 Total reservations: ${reservations.size}")
+    }
 
     val filteredReservations = remember(reservations, selectedDate) {
         val startOfDay = selectedDate.atStartOfDay()
         val endOfDay = selectedDate.atTime(23, 59, 59)
 
-        reservations.filter {
-            it.startTime.isAfter(startOfDay) || it.startTime.isEqual(startOfDay) &&
-                    it.startTime.isBefore(endOfDay) || it.startTime.isEqual(endOfDay)
+        val filtered = reservations.filter {
+            (it.startTime.isAfter(startOfDay) || it.startTime.isEqual(startOfDay)) &&
+                    (it.startTime.isBefore(endOfDay) || it.startTime.isEqual(endOfDay))
         }.sortedBy { it.startTime }
+
+        android.util.Log.d("ReservationsScreen", "📋 Filtered reservations: ${filtered.size}")
+        filtered.forEach { res ->
+            android.util.Log.d("ReservationsScreen", "  - Res ${res.id}: ${res.startTime} - ${res.endTime}, carId=${res.carId}")
+        }
+
+        filtered
     }
 
     val upcomingReservation = filteredReservations.firstOrNull()
     val otherReservations = filteredReservations.drop(1)
+
+    LaunchedEffect(upcomingReservation) {
+        if (upcomingReservation != null) {
+            val canStart = upcomingReservation.startTime.minusMinutes(15).isBefore(now) &&
+                    upcomingReservation.endTime.isAfter(now)
+            android.util.Log.d("ReservationsScreen", "⭐ Upcoming reservation: ${upcomingReservation.id}")
+            android.util.Log.d("ReservationsScreen", "   Start time: ${upcomingReservation.startTime}")
+            android.util.Log.d("ReservationsScreen", "   End time: ${upcomingReservation.endTime}")
+            android.util.Log.d("ReservationsScreen", "   15 min before: ${upcomingReservation.startTime.minusMinutes(15)}")
+            android.util.Log.d("ReservationsScreen", "   Now: $now")
+            android.util.Log.d("ReservationsScreen", "   Can start trip: $canStart")
+        } else {
+            android.util.Log.d("ReservationsScreen", "❌ No upcoming reservation found")
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -80,10 +108,10 @@ fun ReservationsScreen(
                 .fillMaxSize()
                 .padding(padding)
         ) {
-            // Horizontale datum selector
             DateSelector(
                 selectedDate = selectedDate,
                 onDateSelected = {
+                    android.util.Log.d("ReservationsScreen", "📅 Date changed to: $it")
                     selectedDate = it
                     onDateSelected(it)
                 },
@@ -106,12 +134,29 @@ fun ReservationsScreen(
 
                     item {
                         val car = cars.find { it.id == upcomingReservation.carId }
+                        val canStart = upcomingReservation.startTime.minusMinutes(15).isBefore(now) &&
+                                upcomingReservation.endTime.isAfter(now)
+
+                        android.util.Log.d("ReservationsScreen", "🎯 Rendering UpcomingReservationCard")
+                        android.util.Log.d("ReservationsScreen", "   canStartTrip=$canStart")
+                        android.util.Log.d("ReservationsScreen", "   car=${car?.make} ${car?.model}")
+
                         UpcomingReservationCard(
                             reservation = upcomingReservation,
                             car = car,
+                            canStartTrip = canStart,
                             onLocationClick = { location ->
                                 val intent = Intent(Intent.ACTION_VIEW, Uri.parse("geo:0,0?q=$location"))
                                 context.startActivity(intent)
+                            },
+                            onStartTrip = {
+                                android.util.Log.d("ReservationsScreen", "🟢 onStartTrip callback invoked!")
+                                upcomingReservation.id?.let { resId ->
+                                    car?.id?.let { carId ->
+                                        android.util.Log.d("ReservationsScreen", "   Calling parent onStartTrip with resId=$resId, carId=$carId")
+                                        onStartTrip(resId, carId, car)
+                                    } ?: android.util.Log.e("ReservationsScreen", "   ❌ Car ID is null!")
+                                } ?: android.util.Log.e("ReservationsScreen", "   ❌ Reservation ID is null!")
                             }
                         )
                     }
@@ -129,12 +174,23 @@ fun ReservationsScreen(
 
                     items(otherReservations) { reservation ->
                         val car = cars.find { it.id == reservation.carId }
+                        val canStart = reservation.startTime.minusMinutes(15).isBefore(now) &&
+                                reservation.endTime.isAfter(now)
+
                         ReservationCard(
                             reservation = reservation,
                             car = car,
+                            canStartTrip = canStart,
                             onLocationClick = { location ->
                                 val intent = Intent(Intent.ACTION_VIEW, Uri.parse("geo:0,0?q=$location"))
                                 context.startActivity(intent)
+                            },
+                            onStartTrip = {
+                                reservation.id?.let { resId ->
+                                    car?.id?.let { carId ->
+                                        onStartTrip(resId, carId, car)
+                                    }
+                                }
                             }
                         )
                     }
@@ -224,9 +280,13 @@ fun DateChip(
 fun UpcomingReservationCard(
     reservation: Reservation,
     car: Car?,
+    canStartTrip: Boolean,
     onLocationClick: (String) -> Unit,
+    onStartTrip: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    android.util.Log.d("UpcomingCard", "🎨 Rendering card, canStartTrip=$canStartTrip")
+
     Card(
         modifier = modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
@@ -240,14 +300,14 @@ fun UpcomingReservationCard(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                // Auto afbeelding
                 if (car != null && car.imageFileNames.isNotEmpty()) {
                     AsyncImage(
-                        model = car.imageFileNames.firstOrNull()?.let { "http://10.0.2.2:8080/images/$it" }
-                            ?: R.drawable.car,
-                        contentDescription = "Car Image",
-                        modifier = Modifier.size(88.dp, 64.dp),
-                        contentScale = androidx.compose.ui.layout.ContentScale.Crop
+                        model = car.imageFileNames.first(),
+                        contentDescription = "Auto afbeelding",
+                        modifier = Modifier
+                            .size(100.dp)
+                            .clip(RoundedCornerShape(8.dp)),
+                        contentScale = ContentScale.Crop
                     )
                 } else {
                     Box(
@@ -261,7 +321,6 @@ fun UpcomingReservationCard(
                     }
                 }
 
-                // Auto informatie
                 Column(
                     modifier = Modifier
                         .weight(1f)
@@ -291,7 +350,6 @@ fun UpcomingReservationCard(
                     )
                 }
 
-                // Locatie knop
                 IconButton(
                     onClick = { onLocationClick(car?.pickupLocation ?: "Pickup Location") },
                     modifier = Modifier
@@ -306,10 +364,9 @@ fun UpcomingReservationCard(
                 }
             }
 
-            // Specificaties
             if (car != null) {
                 Spacer(modifier = Modifier.height(12.dp))
-                Divider()
+                HorizontalDivider()
                 Spacer(modifier = Modifier.height(12.dp))
 
                 Row(
@@ -322,6 +379,27 @@ fun UpcomingReservationCard(
                     SpecItem(label = "Deuren", value = car.doors?.toString() ?: "N/A")
                 }
             }
+
+            if (canStartTrip) {
+                android.util.Log.d("UpcomingCard", "✅ Rendering Start Rit button")
+                Spacer(modifier = Modifier.height(16.dp))
+                Button(
+                    onClick = {
+                        android.util.Log.d("UpcomingCard", "🔴 Start Rit button CLICKED!")
+                        onStartTrip()
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.tertiary
+                    )
+                ) {
+                    Icon(Icons.Default.PlayArrow, contentDescription = null)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Start Rit", fontWeight = FontWeight.Bold)
+                }
+            } else {
+                android.util.Log.d("UpcomingCard", "⚠️ Button NOT rendered because canStartTrip=false")
+            }
         }
     }
 }
@@ -330,90 +408,105 @@ fun UpcomingReservationCard(
 fun ReservationCard(
     reservation: Reservation,
     car: Car?,
+    canStartTrip: Boolean,
     onLocationClick: (String) -> Unit,
+    onStartTrip: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Card(
         modifier = modifier.fillMaxWidth()
     ) {
-        Row(
-            modifier = Modifier
-                .padding(16.dp)
-                .fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        Column(
+            modifier = Modifier.padding(16.dp)
         ) {
-            // Auto afbeelding
-            if (car != null && car.imageFileNames.isNotEmpty()) {
-                AsyncImage(
-                    model = "${car.imageFileNames.first()}",
-                    contentDescription = "Auto afbeelding",
-                    modifier = Modifier
-                        .size(80.dp)
-                        .clip(RoundedCornerShape(8.dp)),
-                    contentScale = ContentScale.Crop
-                )
-            } else {
-                Box(
-                    modifier = Modifier
-                        .size(80.dp)
-                        .clip(RoundedCornerShape(8.dp))
-                        .background(MaterialTheme.colorScheme.surfaceVariant),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text("Geen foto", style = MaterialTheme.typography.bodySmall)
-                }
-            }
-
-            // Auto informatie
-            Column(
-                modifier = Modifier.weight(1f)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                Text(
-                    text = car?.let { "${it.make} ${it.model}" } ?: "Onbekende auto",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
-                )
+                if (car != null && car.imageFileNames.isNotEmpty()) {
+                    AsyncImage(
+                        model = "${car.imageFileNames.first()}",
+                        contentDescription = "Auto afbeelding",
+                        modifier = Modifier
+                            .size(80.dp)
+                            .clip(RoundedCornerShape(8.dp)),
+                        contentScale = ContentScale.Crop
+                    )
+                } else {
+                    Box(
+                        modifier = Modifier
+                            .size(80.dp)
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(MaterialTheme.colorScheme.surfaceVariant),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text("Geen foto", style = MaterialTheme.typography.bodySmall)
+                    }
+                }
 
-                Spacer(modifier = Modifier.height(4.dp))
-
-                Text(
-                    "${reservation.startTime.hour}:${reservation.startTime.minute.toString().padStart(2, '0')} - " +
-                            "${reservation.endTime.hour}:${reservation.endTime.minute.toString().padStart(2, '0')}",
-                    style = MaterialTheme.typography.bodyLarge
-                )
-
-                Spacer(modifier = Modifier.height(2.dp))
-
-                Text(
-                    "Kenteken: ${car?.licensePlate ?: "Onbekend"}",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-
-                // Specificaties in compacte vorm
-                if (car != null) {
-                    Spacer(modifier = Modifier.height(4.dp))
+                Column(
+                    modifier = Modifier.weight(1f)
+                ) {
                     Text(
-                        "${car.fuelType ?: "N/A"} • ${car.transmission ?: "N/A"} • ${car.seats ?: "N/A"} zitpl.",
-                        style = MaterialTheme.typography.bodySmall,
+                        text = car?.let { "${it.make} ${it.model}" } ?: "Onbekende auto",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+
+                    Spacer(modifier = Modifier.height(4.dp))
+
+                    Text(
+                        "${reservation.startTime.hour}:${reservation.startTime.minute.toString().padStart(2, '0')} - " +
+                                "${reservation.endTime.hour}:${reservation.endTime.minute.toString().padStart(2, '0')}",
+                        style = MaterialTheme.typography.bodyLarge
+                    )
+
+                    Spacer(modifier = Modifier.height(2.dp))
+
+                    Text(
+                        "Kenteken: ${car?.licensePlate ?: "Onbekend"}",
+                        style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+
+                    if (car != null) {
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            "${car.fuelType ?: "N/A"} • ${car.transmission ?: "N/A"} • ${car.seats ?: "N/A"} zitpl.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+
+                IconButton(
+                    onClick = { onLocationClick(car?.pickupLocation ?: "Pickup Location") },
+                    modifier = Modifier
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.primary)
+                        .align(Alignment.CenterVertically)
+                ) {
+                    Icon(
+                        Icons.Default.LocationOn,
+                        contentDescription = "Open kaart",
+                        tint = MaterialTheme.colorScheme.onPrimary
                     )
                 }
             }
 
-            // Locatie knop
-            IconButton(
-                onClick = { onLocationClick(car?.pickupLocation ?: "Pickup Location") },
-                modifier = Modifier
-                    .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.primary)
-                    .align(Alignment.CenterVertically)
-            ) {
-                Icon(
-                    Icons.Default.LocationOn,
-                    contentDescription = "Open kaart",
-                    tint = MaterialTheme.colorScheme.onPrimary
-                )
+            if (canStartTrip) {
+                Spacer(modifier = Modifier.height(12.dp))
+                Button(
+                    onClick = onStartTrip,
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.tertiary
+                    )
+                ) {
+                    Icon(Icons.Default.PlayArrow, contentDescription = null)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Start Rit")
+                }
             }
         }
     }
