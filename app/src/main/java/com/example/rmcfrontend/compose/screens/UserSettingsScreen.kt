@@ -15,6 +15,7 @@ import androidx.compose.material.icons.outlined.ManageAccounts
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import com.example.rmcfrontend.compose.components.*
 import com.example.rmcfrontend.compose.viewmodel.UserState
@@ -78,7 +79,11 @@ fun UserSettingsScreen(
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
-                        IconButton(onClick = onReload, enabled = !state.isBusy) {
+                        IconButton(
+                            onClick = onReload,
+                            enabled = !state.isBusy,
+                            modifier = Modifier.testTag("user_reload")
+                        ) {
                             Icon(Icons.Outlined.Refresh, contentDescription = "Reload")
                         }
                     }
@@ -95,26 +100,30 @@ fun UserSettingsScreen(
                         value = first.value,
                         onValueChange = { first.value = it },
                         label = "First name",
-                        leadingIcon = Icons.Outlined.Person
+                        leadingIcon = Icons.Outlined.Person,
+                        modifier = Modifier.testTag("user_first")
                     )
                     AppTextField(
                         value = last.value,
                         onValueChange = { last.value = it },
                         label = "Last name",
-                        leadingIcon = Icons.Outlined.Person
+                        leadingIcon = Icons.Outlined.Person,
+                        modifier = Modifier.testTag("user_last")
                     )
                     AppTextField(
                         value = email.value,
                         onValueChange = { email.value = it },
                         label = "Email address",
-                        leadingIcon = Icons.Outlined.Email
+                        leadingIcon = Icons.Outlined.Email,
+                        modifier = Modifier.testTag("user_email")
                     )
 
                     GradientButton(
                         text = "Save changes",
                         leadingIcon = Icons.Outlined.Save,
                         onClick = { onSave(first.value.trim(), last.value.trim(), email.value.trim()) },
-                        loading = state.isBusy
+                        loading = state.isBusy,
+                        modifier = Modifier.testTag("user_save")
                     )
                 }
             }
@@ -144,7 +153,8 @@ fun UserSettingsScreen(
                         enabled = !state.isBusy,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(54.dp),
+                            .height(54.dp)
+                            .testTag("user_disable"),
                         shape = RoundedCornerShape(18.dp),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = MaterialTheme.colorScheme.tertiary,
@@ -160,7 +170,9 @@ fun UserSettingsScreen(
                         text = "Logout",
                         onClick = onLogout,
                         enabled = !state.isBusy,
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .testTag("user_logout")
                     )
                 }
             }

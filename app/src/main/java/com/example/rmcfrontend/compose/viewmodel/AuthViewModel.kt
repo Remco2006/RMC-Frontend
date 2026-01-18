@@ -4,6 +4,10 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.rmcfrontend.api.ApiClient
+import com.example.rmcfrontend.api.ApiSession
+import com.example.rmcfrontend.api.AuthApi
+import com.example.rmcfrontend.api.DefaultApiSession
+import com.example.rmcfrontend.api.UsersApi
 import com.example.rmcfrontend.api.models.CreateUserRequest
 import com.example.rmcfrontend.api.models.LoginRequest
 import com.example.rmcfrontend.auth.TokenManager
@@ -18,7 +22,12 @@ data class AuthState(
 
 enum class LastAction { LOGIN_SUCCESS, REGISTER_SUCCESS }
 
-class AuthViewModel(private val tokenManager: TokenManager) : ViewModel() {
+class AuthViewModel(
+    private val tokenManager: TokenManager,
+    private val authApi: AuthApi = ApiClient.authApi,
+    private val usersApi: UsersApi = ApiClient.usersApi,
+    private val apiSession: ApiSession = DefaultApiSession
+) : ViewModel() {
 
     val authState = mutableStateOf(
         AuthState(isLoggedIn = tokenManager.isLoggedIn())
@@ -28,11 +37,11 @@ class AuthViewModel(private val tokenManager: TokenManager) : ViewModel() {
         authState.value = authState.value.copy(isBusy = true, errorMessage = null, lastAction = null)
         viewModelScope.launch {
             try {
-                val res = ApiClient.authApi.login(LoginRequest(email = email, password = password))
+                val res = authApi.login(LoginRequest(email = email, password = password))
                 if (res.isSuccessful && res.body() != null) {
                     val body = res.body()!!
                     tokenManager.saveToken(body.token, body.id, body.email)
-                    ApiClient.setAuthToken(body.token)
+                    apiSession.setAuthToken(body.token)
                     authState.value = AuthState(
                         isLoggedIn = true,
                         isBusy = false,
@@ -53,7 +62,7 @@ class AuthViewModel(private val tokenManager: TokenManager) : ViewModel() {
         authState.value = authState.value.copy(isBusy = true, errorMessage = null, lastAction = null)
         viewModelScope.launch {
             try {
-                val res = ApiClient.usersApi.register(
+                val res = usersApi.register(
                     CreateUserRequest(
                         firstName = firstName,
                         lastName = lastName,
@@ -83,7 +92,7 @@ class AuthViewModel(private val tokenManager: TokenManager) : ViewModel() {
 
     fun logout() {
         tokenManager.clearToken()
-        ApiClient.clearAuthToken()
+        apiSession.clearAuthToken()
         authState.value = AuthState(isLoggedIn = false)
     }
 }

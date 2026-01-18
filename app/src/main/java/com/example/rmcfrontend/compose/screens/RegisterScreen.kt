@@ -12,6 +12,7 @@ import androidx.compose.material.icons.outlined.PersonAdd
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import com.example.rmcfrontend.R
@@ -74,26 +75,30 @@ fun RegisterScreen(
                         value = first.value,
                         onValueChange = { first.value = it },
                         label = "First name",
-                        leadingIcon = Icons.Outlined.Person
+                        leadingIcon = Icons.Outlined.Person,
+                        modifier = Modifier.testTag("register_first")
                     )
                     AppTextField(
                         value = last.value,
                         onValueChange = { last.value = it },
                         label = "Last name",
-                        leadingIcon = Icons.Outlined.Person
+                        leadingIcon = Icons.Outlined.Person,
+                        modifier = Modifier.testTag("register_last")
                     )
                     AppTextField(
                         value = email.value,
                         onValueChange = { email.value = it },
                         label = "Email address",
-                        leadingIcon = Icons.Outlined.Email
+                        leadingIcon = Icons.Outlined.Email,
+                        modifier = Modifier.testTag("register_email")
                     )
                     AppTextField(
                         value = password.value,
                         onValueChange = { password.value = it },
                         label = "Password",
                         leadingIcon = Icons.Outlined.Lock,
-                        visualTransformation = PasswordVisualTransformation()
+                        visualTransformation = PasswordVisualTransformation(),
+                        modifier = Modifier.testTag("register_password")
                     )
 
                     if (state.errorMessage != null) {
@@ -110,7 +115,8 @@ fun RegisterScreen(
                                 password.value
                             )
                         },
-                        loading = state.isBusy
+                        loading = state.isBusy,
+                        modifier = Modifier.testTag("register_button")
                     )
 
                     Text(
@@ -123,7 +129,8 @@ fun RegisterScreen(
                     SecondaryPillButton(
                         text = "Back to login",
                         onClick = onBack,
-                        enabled = !state.isBusy
+                        enabled = !state.isBusy,
+                        modifier = Modifier.testTag("register_back")
                     )
                 }
             }

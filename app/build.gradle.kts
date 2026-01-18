@@ -42,6 +42,11 @@ android {
     buildFeatures {
         compose = true
     }
+
+    // Helps Android Studio/Gradle reliably treat Compose UI tests as instrumentation tests.
+    testOptions {
+        animationsDisabled = true
+    }
 }
 
 dependencies {
@@ -67,9 +72,13 @@ dependencies {
     implementation("io.coil-kt:coil-compose:2.7.0")
     testImplementation("junit:junit:4.13.2")
     testImplementation("androidx.arch.core:core-testing:2.2.0")
-    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3")
+    // Keep test coroutines aligned with the runtime version.
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.10.2")
     testImplementation("io.mockk:mockk:1.13.8")
     testImplementation("io.mockk:mockk-android:1.13.8")
+
+    // HTTP API endpoint tests
+    testImplementation("com.squareup.okhttp3:mockwebserver:4.12.0")
 
     // Compose navigation + lifecycle
     implementation("androidx.navigation:navigation-compose:2.8.3")
@@ -92,7 +101,14 @@ dependencies {
     testImplementation("junit:junit:4.13.2")
 
     // UI testing
+    // Compose BOM must also be applied to the androidTest configuration, otherwise
+    // versionless Compose test artifacts may not resolve and Android Studio may mis-run
+    // these tests as local unit tests.
+    androidTestImplementation(platform("androidx.compose:compose-bom:2024.10.00"))
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
+    androidTestImplementation("androidx.test:runner:1.5.2")
+    androidTestImplementation("androidx.test:rules:1.5.0")
+    androidTestImplementation("androidx.test.espresso:espresso-core:3.7.0")
     androidTestImplementation("androidx.compose.ui:ui-test-junit4")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
 }

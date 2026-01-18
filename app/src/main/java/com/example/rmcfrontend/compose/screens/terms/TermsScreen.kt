@@ -14,6 +14,7 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -48,7 +49,10 @@ fun TermsScreen(
                     }
                 },
                 actions = {
-                    IconButton(onClick = { showCreate = true }) {
+                    IconButton(
+                        onClick = { showCreate = true },
+                        modifier = Modifier.testTag("terms_add")
+                    ) {
                         Icon(Icons.Outlined.Add, contentDescription = "Add")
                     }
                 }
@@ -154,7 +158,10 @@ private fun EmptyTerms(onAdd: () -> Unit) {
                 style = MaterialTheme.typography.bodyMedium
             )
             Spacer(Modifier.height(14.dp))
-            Button(onClick = onAdd) { Text("Create Terms") }
+            Button(
+                onClick = onAdd,
+                modifier = Modifier.testTag("terms_empty_create")
+            ) { Text("Create Terms") }
         }
     }
 }
@@ -299,7 +306,9 @@ private fun TermsEditDialog(
                     onValueChange = { t = it },
                     label = { Text("Title") },
                     singleLine = true,
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag("terms_title_field")
                 )
                 Spacer(Modifier.height(10.dp))
                 OutlinedTextField(
@@ -307,18 +316,24 @@ private fun TermsEditDialog(
                     onValueChange = { c = it },
                     label = { Text("Content") },
                     minLines = 6,
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag("terms_content_field")
                 )
             }
         },
         confirmButton = {
             Button(
                 onClick = { onSave(t, c) },
-                enabled = t.isNotBlank() && c.isNotBlank()
+                enabled = t.isNotBlank() && c.isNotBlank(),
+                modifier = Modifier.testTag("terms_save_button")
             ) { Text("Save") }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Cancel") }
+            TextButton(
+                onClick = onDismiss,
+                modifier = Modifier.testTag("terms_cancel_button")
+            ) { Text("Cancel") }
         }
     )
 }

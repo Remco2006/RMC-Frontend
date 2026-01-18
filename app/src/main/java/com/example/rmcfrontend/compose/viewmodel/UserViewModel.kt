@@ -4,6 +4,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.rmcfrontend.api.ApiClient
+import com.example.rmcfrontend.api.ApiSession
+import com.example.rmcfrontend.api.DefaultApiSession
+import com.example.rmcfrontend.api.UsersApi
 import com.example.rmcfrontend.api.models.UpdateUserRequest
 import com.example.rmcfrontend.api.models.response.UserResponse
 import com.example.rmcfrontend.auth.TokenManager
@@ -17,7 +20,11 @@ data class UserState(
     val lastDisabledOk: Boolean = false
 )
 
-class UserViewModel(private val tokenManager: TokenManager) : ViewModel() {
+class UserViewModel(
+    private val tokenManager: TokenManager,
+    private val usersApi: UsersApi = ApiClient.usersApi,
+    private val apiSession: ApiSession = DefaultApiSession
+) : ViewModel() {
 
     val state = mutableStateOf(UserState())
 
@@ -30,7 +37,7 @@ class UserViewModel(private val tokenManager: TokenManager) : ViewModel() {
         state.value = state.value.copy(isBusy = true, errorMessage = null, lastSavedOk = false, lastDisabledOk = false)
         viewModelScope.launch {
             try {
-                val res = ApiClient.usersApi.getUser(id)
+                val res = usersApi.getUser(id)
                 if (res.isSuccessful && res.body() != null) {
                     state.value = state.value.copy(isBusy = false, user = res.body())
                 } else {
@@ -51,7 +58,7 @@ class UserViewModel(private val tokenManager: TokenManager) : ViewModel() {
         state.value = state.value.copy(isBusy = true, errorMessage = null, lastSavedOk = false)
         viewModelScope.launch {
             try {
-                val res = ApiClient.usersApi.updateUser(
+                val res = usersApi.updateUser(
                     id,
                     UpdateUserRequest(
                         id = id.toLong(),
@@ -82,12 +89,12 @@ class UserViewModel(private val tokenManager: TokenManager) : ViewModel() {
         state.value = state.value.copy(isBusy = true, errorMessage = null, lastDisabledOk = false)
         viewModelScope.launch {
             try {
-                val res = ApiClient.usersApi.disableUser(id)
+                val res = usersApi.disableUser(id)
                 if (res.isSuccessful) {
                     state.value = state.value.copy(isBusy = false, lastDisabledOk = true)
                     // Clear local auth immediately.
                     tokenManager.clearToken()
-                    ApiClient.clearAuthToken()
+                    apiSession.clearAuthToken()
                     onDisabled()
                 } else {
                     state.value = state.value.copy(isBusy = false, errorMessage = "Disable failed (${res.code()}).")

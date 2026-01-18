@@ -11,6 +11,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import com.example.rmcfrontend.R
@@ -71,14 +72,16 @@ fun LoginScreen(
                         value = email.value,
                         onValueChange = { email.value = it },
                         label = "Email address",
-                        leadingIcon = Icons.Outlined.Email
+                        leadingIcon = Icons.Outlined.Email,
+                        modifier = Modifier.testTag("login_email")
                     )
                     AppTextField(
                         value = password.value,
                         onValueChange = { password.value = it },
                         label = "Password",
                         leadingIcon = Icons.Outlined.Lock,
-                        visualTransformation = PasswordVisualTransformation()
+                        visualTransformation = PasswordVisualTransformation(),
+                        modifier = Modifier.testTag("login_password")
                     )
 
                     if (state.errorMessage != null) {
@@ -88,7 +91,8 @@ fun LoginScreen(
                     GradientButton(
                         text = "Log in",
                         onClick = { onLogin(email.value.trim(), password.value) },
-                        loading = state.isBusy
+                        loading = state.isBusy,
+                        modifier = Modifier.testTag("login_button")
                     )
 
                     Text(
@@ -101,7 +105,8 @@ fun LoginScreen(
                     SecondaryPillButton(
                         text = "Create account",
                         onClick = onNavigateToRegister,
-                        enabled = !state.isBusy
+                        enabled = !state.isBusy,
+                        modifier = Modifier.testTag("login_create_account")
                     )
                 }
             }
