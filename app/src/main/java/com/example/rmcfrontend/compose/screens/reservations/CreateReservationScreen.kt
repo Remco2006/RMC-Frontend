@@ -71,7 +71,6 @@ fun CreateReservationScreen(
     var searchQuery by remember { mutableStateOf("") }
     val snackbarHostState = remember { SnackbarHostState() }
 
-    // Gefilterde auto's op basis van zoekquery
     val filteredCars = remember(availableCars, searchQuery) {
         if (searchQuery.isBlank()) {
             availableCars
@@ -136,7 +135,6 @@ fun CreateReservationScreen(
                 onDateChange = { selectedDate = it }
             )
 
-            // Auto selectie met zoeken en map
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -1111,7 +1109,7 @@ fun CarSelectionCard(
             verticalAlignment = Alignment.CenterVertically
         ) {
             AsyncImage(
-                model = car.imageFileNames.firstOrNull()?.let { "http://10.0.2.2:8080/images/$it" }
+                model = car.imageFileNames.firstOrNull()?.let { "$it" }
                     ?: R.drawable.car,
                 contentDescription = "Car Image",
                 modifier = Modifier.size(88.dp, 64.dp),
