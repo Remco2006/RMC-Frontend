@@ -29,7 +29,6 @@ import androidx.navigation.navArgument
 import com.example.rmcfrontend.api.models.CreateCarRequest
 import com.example.rmcfrontend.api.models.UpdateCarRequest
 import com.example.rmcfrontend.auth.TokenManager
-import com.example.rmcfrontend.compose.RequestLocationPermission
 import com.example.rmcfrontend.compose.screens.reservations.CreateReservationScreen
 import com.example.rmcfrontend.compose.screens.terms.TermsScreen
 import com.example.rmcfrontend.service.ActiveTripService
@@ -51,6 +50,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import com.example.rmcfrontend.api.models.Car
+import org.koin.androidx.compose.koinViewModel
 
 sealed class HomeRoute(val value: String) {
     data object Listings : HomeRoute("listings")
@@ -77,18 +77,18 @@ sealed class HomeRoute(val value: String) {
 @Composable
 fun HomeScreen(
     tokenManager: TokenManager,
-    onLogout: () -> Unit
+    onLogout: () -> Unit,
+    carsVm: CarsViewModel = koinViewModel(),
+    userVm: UserViewModel = koinViewModel(),
+    termsVm: TermsViewModel = koinViewModel(),
+    telemetryVm: TelemetryViewModel = koinViewModel(),
+    reservationsVm: ReservationsViewModel = koinViewModel()
 ) {
     val navController = rememberNavController()
-    val carsVm = remember { CarsViewModel() }
-    val userVm = remember { UserViewModel(tokenManager) }
-    val termsVm = remember { TermsViewModel() }
-    val telemetryVm = remember { TelemetryViewModel() }
-    val reservationsVm = remember { ReservationsViewModel() }
     val context = LocalContext.current
 
     var showPermissionDialog by remember { mutableStateOf(false) }
-    var showSettingsDialog by remember { mutableStateOf(false) } // ✅ NIEUW
+    var showSettingsDialog by remember { mutableStateOf(false) }
     var pendingTripStart by remember { mutableStateOf<Triple<Long, Long, Car?>?>(null) }
 
     LaunchedEffect(Unit) {
@@ -125,7 +125,6 @@ fun HomeScreen(
         } else {
             android.util.Log.e("HomeScreen", "❌ Permissions denied: $permissionsMap")
 
-            // ✅ Check of permanent geweigerd
             val permanentlyDenied = permissionsMap.any { (permission, granted) ->
                 !granted && !(context as? android.app.Activity)?.shouldShowRequestPermissionRationale(permission)!! ?: false
             }
@@ -159,7 +158,7 @@ fun HomeScreen(
         }
     }
 
-    // ✅ Dialog voor normale weigering
+    // Permission dialogs
     if (showPermissionDialog) {
         AlertDialog(
             onDismissRequest = {
@@ -189,7 +188,6 @@ fun HomeScreen(
         )
     }
 
-    // ✅ NIEUW: Dialog voor permanente weigering
     if (showSettingsDialog) {
         AlertDialog(
             onDismissRequest = {
@@ -203,7 +201,6 @@ fun HomeScreen(
             confirmButton = {
                 Button(onClick = {
                     showSettingsDialog = false
-                    // Open app settings
                     val intent = Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
                         data = Uri.parse("package:${context.packageName}")
                     }
@@ -245,13 +242,13 @@ fun HomeScreen(
 
     Scaffold(
         bottomBar = {
-            // Hide bottom bar on detail/edit/create screens
             if (currentRoute in listOf(
                     HomeRoute.Listings.value,
                     HomeRoute.Map.value,
                     HomeRoute.Reservations.value,
-                    HomeRoute.User.value
-                , HomeRoute.Terms.value)) {
+                    HomeRoute.User.value,
+                    HomeRoute.Terms.value
+                )) {
                 NavigationBar(
                     containerColor = MaterialTheme.colorScheme.surface,
                     tonalElevation = 10.dp
@@ -292,7 +289,6 @@ fun HomeScreen(
                             unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     )
-                    
                     NavigationBarItem(
                         selected = selected == HomeRoute.Terms.value,
                         onClick = {
@@ -311,7 +307,7 @@ fun HomeScreen(
                             unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     )
-NavigationBarItem(
+                    NavigationBarItem(
                         selected = selected == HomeRoute.User.value,
                         onClick = {
                             navController.navigate(HomeRoute.User.value) {
@@ -338,7 +334,6 @@ NavigationBarItem(
             startDestination = HomeRoute.Listings.value,
             modifier = Modifier.padding(padding)
         ) {
-            // Listings route
             composable(HomeRoute.Listings.value) {
                 ListingsScreen(
                     state = carsVm.state.value,
@@ -349,7 +344,6 @@ NavigationBarItem(
                 )
             }
 
-            // Car details route
             composable(
                 route = HomeRoute.CarDetails.value,
                 arguments = listOf(navArgument("carId") { type = NavType.LongType })
@@ -367,7 +361,6 @@ NavigationBarItem(
                 )
             }
 
-            // Create car route
             composable(HomeRoute.CreateCar.value) {
                 CreateCarScreen(
                     carsViewModel = carsVm,
@@ -386,7 +379,6 @@ NavigationBarItem(
                 )
             }
 
-            // Edit car route
             composable(
                 route = HomeRoute.EditCar.value,
                 arguments = listOf(navArgument("carId") { type = NavType.LongType })
@@ -411,7 +403,6 @@ NavigationBarItem(
                 )
             }
 
-            // Reservations list route
             composable(HomeRoute.Reservations.value) {
                 val uiState by reservationsVm.uiState.collectAsState()
                 val carsState = carsVm.state.value
@@ -456,7 +447,6 @@ NavigationBarItem(
                 )
             }
 
-            // Create reservation route
             composable(
                 route = HomeRoute.CreateReservation.value,
                 arguments = listOf(navArgument("date") { type = NavType.StringType })
@@ -466,13 +456,12 @@ NavigationBarItem(
                     ?: LocalDateTime.now().toLocalDate()
                 val uiState by reservationsVm.uiState.collectAsState()
 
-                // Voeg CarSearchViewModel toe
-                val carSearchVm = remember { CarSearchViewModel() }
+                // ✅ Gebruik koinViewModel() in plaats van remember
+                val carSearchVm: CarSearchViewModel = koinViewModel()
                 val searchState by carSearchVm.uiState.collectAsState()
 
                 var selectedCarId by remember { mutableStateOf<Long?>(null) }
 
-                // Load car reservations and terms when car is selected
                 LaunchedEffect(selectedCarId) {
                     selectedCarId?.let { carId ->
                         reservationsVm.loadCarReservations(carId)
@@ -512,13 +501,11 @@ NavigationBarItem(
                 )
             }
 
-            // User settings route
-            
             composable(HomeRoute.Terms.value) {
                 TermsScreen(vm = termsVm)
             }
 
-composable(HomeRoute.User.value) {
+            composable(HomeRoute.User.value) {
                 UserSettingsScreen(
                     state = userVm.state.value,
                     onReload = {
